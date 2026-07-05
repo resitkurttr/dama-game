@@ -5,387 +5,285 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>🎲 Dama King</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body {
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-family: 'Segoe UI', sans-serif;
-            color: white;
-            padding: 12px;
-            gap: 12px;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        h1 { font-size: 24px; text-shadow: 0 0 20px rgba(255,215,0,0.5); }
-        .score-board { display: flex; gap: 20px; font-size: 16px; }
-        .score-board .player {
-            padding: 8px 16px; border-radius: 10px;
-            background: rgba(255,255,255,0.08); text-align: center;
-            border: 2px solid transparent; min-width: 90px;
-        }
-        .score-board .player.active { background: rgba(255,215,0,0.25); border-color: gold; }
-        .score-board .pieces { font-size: 12px; opacity: 0.7; margin-top: 2px; }
-        #board {
-            display: grid; grid-template-columns: repeat(8, 1fr);
-            gap: 2px; padding: 5px; background: #8B4513;
-            border-radius: 8px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-        }
-        .cell {
-            width: clamp(36px, calc((100vw - 60px) / 8), 48px);
-            height: clamp(36px, calc((100vw - 60px) / 8), 48px);
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 4px; position: relative;
-        }
-        .cell.light { background: #DEB887; }
-        .cell.dark { background: #8B4513; }
-        .cell.sel { background: #FFD700 !important; box-shadow: inset 0 0 12px rgba(255,165,0,0.6); }
-        .cell.mv::after {
-            content: ''; position: absolute; width: 28%; height: 28%;
-            border-radius: 50%; background: rgba(76,175,80,0.7);
-        }
-        .cell.jp::after {
-            content: ''; position: absolute; width: 45%; height: 45%;
-            border-radius: 50%; background: rgba(255,87,34,0.7);
-        }
-        .pc {
-            width: 72%; height: 72%; border-radius: 50%;
-            border: 3px solid rgba(255,255,255,0.25);
-            display: flex; align-items: center; justify-content: center;
-            font-size: clamp(11px, 2.5vw, 16px); z-index: 2;
-        }
-        .pc.bk { background: linear-gradient(145deg, #3a3a3a, #111); box-shadow: 0 2px 6px rgba(0,0,0,0.5); }
-        .pc.wh { background: linear-gradient(145deg, #fff, #ccc); box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
-        .pc.king { border-color: gold; box-shadow: 0 0 10px gold; }
-        .info { font-size: 15px; padding: 8px 20px; background: rgba(255,255,255,0.08); border-radius: 18px; }
-        .btn-group { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
-        .btn {
-            padding: 12px 28px; font-size: 15px; border: none; border-radius: 18px;
-            cursor: pointer; font-weight: bold; min-width: 140px;
-        }
-        .btn-gold { background: linear-gradient(145deg, #FFD700, #FFA500); color: #1a1a2e; }
-        .btn-green { background: linear-gradient(145deg, #4CAF50, #2E7D32); color: white; }
-        .btn-red { background: linear-gradient(145deg, #f44336, #b71c1c); color: white; }
-        .overlay {
-            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85); z-index: 100;
-            align-items: center; justify-content: center; flex-direction: column; gap: 16px;
-        }
-        .overlay.show { display: flex; }
-        .overlay h2 { font-size: 28px; text-shadow: 0 0 30px gold; }
-        .overlay p { font-size: 18px; }
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+        body{background:linear-gradient(135deg,#1a1a2e,#16213e);min-height:100vh;display:flex;flex-direction:column;align-items:center;font-family:'Segoe UI',sans-serif;color:white;padding:10px;gap:10px;user-select:none}
+        h1{font-size:22px;text-shadow:0 0 20px rgba(255,215,0,0.5)}
+        .mode-bar{display:flex;gap:4px;background:rgba(255,255,255,0.1);border-radius:18px;padding:3px}
+        .mode-btn{padding:6px 14px;border:none;border-radius:16px;background:transparent;color:rgba(255,255,255,0.5);cursor:pointer;font-size:13px;transition:all 0.2s}
+        .mode-btn.active{background:rgba(255,215,0,0.3);color:#FFD700}
+        .score-board{display:flex;gap:16px;font-size:15px}
+        .player{padding:6px 14px;border-radius:8px;background:rgba(255,255,255,0.08);text-align:center;border:2px solid transparent;min-width:80px}
+        .player.active{background:rgba(255,215,0,0.2);border-color:gold}
+        .player .pieces{font-size:11px;opacity:0.7;margin-top:2px}
+        #board{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;padding:4px;background:#8B4513;border-radius:8px;box-shadow:0 8px 25px rgba(0,0,0,0.5)}
+        .cell{width:clamp(34px,calc((100vw - 56px)/8),46px);height:clamp(34px,calc((100vw - 56px)/8),46px);display:flex;align-items:center;justify-content:center;border-radius:4px;position:relative}
+        .cell.light{background:#DEB887}.cell.dark{background:#8B4513}
+        .cell.sel{background:#FFD700!important;box-shadow:inset 0 0 10px rgba(255,165,0,0.6)}
+        .cell.mv::after{content:'';position:absolute;width:26%;height:26%;border-radius:50%;background:rgba(76,175,80,0.7)}
+        .cell.jp::after{content:'';position:absolute;width:42%;height:42%;border-radius:50%;background:rgba(255,87,34,0.7)}
+        .pc{width:70%;height:70%;border-radius:50%;border:2px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:clamp(10px,2.5vw,15px);z-index:2}
+        .pc.bk{background:linear-gradient(145deg,#3a3a3a,#111);box-shadow:0 2px 5px rgba(0,0,0,0.5)}
+        .pc.wh{background:linear-gradient(145deg,#fff,#ccc);box-shadow:0 2px 5px rgba(0,0,0,0.2)}
+        .pc.king{border-color:gold;box-shadow:0 0 8px gold}
+        .info{font-size:14px;padding:6px 18px;background:rgba(255,255,255,0.08);border-radius:14px}
+        .btn-group{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+        .btn{padding:10px 22px;font-size:14px;border:none;border-radius:16px;cursor:pointer;font-weight:bold;min-width:120px}
+        .btn-gold{background:linear-gradient(145deg,#FFD700,#FFA500);color:#1a1a2e}
+        .btn-red{background:linear-gradient(145deg,#f44336,#b71c1c);color:white}
+        .btn-green{background:linear-gradient(145deg,#4CAF50,#2E7D32);color:white}
+        .overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+        .overlay.show{display:flex}
+        .overlay h2{font-size:26px;text-shadow:0 0 25px gold}
+        .overlay p{font-size:16px}
     </style>
 </head>
 <body>
     <h1>🎲 Dama King</h1>
+    <div class="mode-bar">
+        <button class="mode-btn active" id="mAi">🤖 AI</button>
+        <button class="mode-btn" id="m2p">👥 2 Kişi</button>
+    </div>
     <div class="score-board">
-        <div class="player active" id="p1"><span id="p1n">⚫ Siyah</span><div class="pieces" id="p1c">12 taş</div></div>
-        <div class="player" id="p2"><span id="p2n">⚪ Beyaz</span><div class="pieces" id="p2c">12 taş</div></div>
+        <div class="player active" id="p1"><span id="p1n">⚫ Sen</span><div class="pieces" id="p1c">12 taş</div></div>
+        <div class="player" id="p2"><span id="p2n">⚪ AI</span><div class="pieces" id="p2c">12 taş</div></div>
     </div>
     <div id="board"></div>
-    <div class="info" id="status">⚫ Siyah'ın sırası</div>
+    <div class="info" id="status">⚫ Sıran</div>
     <div class="btn-group">
         <button class="btn btn-gold" id="btnNew">🔄 Yeni Oyun</button>
         <button class="btn btn-red" id="btnUndo">↩️ Geri Al</button>
     </div>
-
     <div class="overlay" id="overlay">
         <h2 id="winnerText"></h2>
         <p id="winnerSub"></p>
         <button class="btn btn-green" id="btnAgain">🔄 Tekrar Oyna</button>
     </div>
 
-    <script>
-    (function() {
-        var ROWS = 8, COLS = 8;
-        var board = [], selected = null, currentPlayer = 'black';
-        var mustJump = false, jumpPiece = null;
-        var history = [];
+<script>
+(function(){
+var ROWS=8,COLS=8,board=[],selected=null,currentPlayer='black',mustJump=false,jumpPiece=null,history=[];
+var gameMode='ai',aiThinking=false;
 
-        function saveState() {
-            var snap = [];
-            for (var r = 0; r < ROWS; r++) {
-                snap[r] = [];
-                for (var c = 0; c < COLS; c++) {
-                    var p = board[r][c];
-                    snap[r][c] = p ? { color: p.color, king: p.king } : null;
-                }
+function saveState(){
+    var s=[];
+    for(var r=0;r<ROWS;r++){s[r]=[];for(var c=0;c<COLS;c++){var p=board[r][c];s[r][c]=p?{color:p.color,king:p.king}:null;}}
+    history.push({board:s,player:currentPlayer});
+    if(history.length>50)history.shift();
+}
+
+function initBoard(){
+    board=[];
+    for(var r=0;r<ROWS;r++){board[r]=[];for(var c=0;c<COLS;c++){
+        if((r+c)%2===1){if(r<3)board[r][c]={color:'white',king:false};else if(r>4)board[r][c]={color:'black',king:false};else board[r][c]=null;}
+        else board[r][c]=null;
+    }}
+}
+
+function getValidMoves(r,c){
+    var piece=board[r][c];if(!piece)return[];
+    var moves=[],dirs;
+    if(piece.king)dirs=[[-1,-1],[-1,1],[1,-1],[1,1]];
+    else if(piece.color==='black')dirs=[[-1,-1],[-1,1]];
+    else dirs=[[1,-1],[1,1]];
+    for(var i=0;i<dirs.length;i++){
+        var dr=dirs[i][0],dc=dirs[i][1],nr=r+dr,nc=c+dc;
+        if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS){
+            if(!board[nr][nc])moves.push({r:nr,c:nc,isJump:false});
+            else if(board[nr][nc].color!==piece.color){
+                var jr=nr+dr,jc=nc+dc;
+                if(jr>=0&&jr<ROWS&&jc>=0&&jc<COLS&&!board[jr][jc])
+                    moves.push({r:jr,c:jc,isJump:true,captured:{r:nr,c:nc}});
             }
-            history.push({ board: snap, player: currentPlayer });
-            if (history.length > 50) history.shift();
         }
+    }
+    return moves;
+}
 
-        function initBoard() {
-            board = [];
-            for (var r = 0; r < ROWS; r++) {
-                board[r] = [];
-                for (var c = 0; c < COLS; c++) {
-                    if ((r + c) % 2 === 1) {
-                        if (r < 3) board[r][c] = { color: 'white', king: false };
-                        else if (r > 4) board[r][c] = { color: 'black', king: false };
-                        else board[r][c] = null;
-                    } else {
-                        board[r][c] = null;
+function hasAnyJumps(color){
+    for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++)
+        if(board[r][c]&&board[r][c].color===color&&getValidMoves(r,c).some(function(m){return m.isJump;}))return true;
+    return false;
+}
+
+function renderBoard(){
+    var el=document.getElementById('board');el.innerHTML='';
+    var hl=selected?getValidMoves(selected.r,selected.c):[];
+    for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){
+        var cell=document.createElement('div');
+        cell.className='cell '+((r+c)%2===0?'light':'dark');
+        if(selected&&selected.r===r&&selected.c===c)cell.classList.add('sel');
+        var isMv=hl.find(function(m){return m.r===r&&m.c===c;});
+        if(isMv)cell.classList.add(isMv.isJump?'jp':'mv');
+        var piece=board[r][c];
+        if(piece){
+            var pc=document.createElement('div');
+            pc.className='pc '+(piece.color==='black'?'bk':'wh')+(piece.king?' king':'');
+            if(piece.king)pc.innerHTML='&#x1F451;';
+            cell.appendChild(pc);
+        }
+        (function(row,col){cell.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();onCellClick(row,col);});})(r,c);
+        el.appendChild(cell);
+    }
+    updateScore();
+}
+
+function onCellClick(r,c){
+    if(aiThinking)return;
+    if(mustJump&&jumpPiece){
+        var jm=getValidMoves(jumpPiece.r,jumpPiece.c).filter(function(m){return m.isJump;});
+        var tgt=jm.find(function(m){return m.r===r&&m.c===c;});
+        if(tgt){saveState();doJump(jumpPiece.r,jumpPiece.c,tgt);}
+        else{mustJump=false;jumpPiece=null;switchPlayer();}
+        return;
+    }
+    var piece=board[r][c];
+    if(piece&&piece.color===currentPlayer){
+        if(hasAnyJumps(currentPlayer)){
+            var mv=getValidMoves(r,c);
+            if(mv.some(function(m){return m.isJump;})){selected={r:r,c:c};renderBoard();}
+            return;
+        }
+        selected={r:r,c:c};renderBoard();return;
+    }
+    if(selected){
+        var mv=getValidMoves(selected.r,selected.c);
+        var move=mv.find(function(m){return m.r===r&&m.c===c;});
+        if(move){saveState();if(move.isJump)doJump(selected.r,selected.c,move);else doMove(selected.r,selected.c,r,c);}
+        else{selected=null;renderBoard();}
+    }
+}
+
+function doMove(fr,fc,tr,tc){board[tr][tc]=board[fr][fc];board[fr][fc]=null;promote(tr,tc);selected=null;switchPlayer();}
+
+function doJump(fr,fc,move){
+    board[move.r][move.c]=board[fr][fc];board[fr][fc]=null;
+    board[move.captured.r][move.captured.c]=null;promote(move.r,move.c);
+    var next=getValidMoves(move.r,move.c).filter(function(m){return m.isJump;});
+    if(next.length>0){selected={r:move.r,c:move.c};mustJump=true;jumpPiece={r:move.r,c:move.c};renderBoard();return;}
+    selected=null;mustJump=false;jumpPiece=null;switchPlayer();
+}
+
+function promote(r,c){var p=board[r][c];if(p&&!p.king){if((p.color==='black'&&r===0)||(p.color==='white'&&r===7))p.king=true;}}
+
+function switchPlayer(){
+    currentPlayer=currentPlayer==='black'?'white':'black';selected=null;
+    var bc=0,wc=0;
+    for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){
+        if(board[r][c]&&board[r][c].color==='black')bc++;
+        if(board[r][c]&&board[r][c].color==='white')wc++;
+    }
+    if(bc===0){showWin('⚪ Beyaz Kazandı!','Tüm taşlar yok edildi');return;}
+    if(wc===0){showWin('⚫ Siyah Kazandı!','Tüm taşlar yok edildi');return;}
+    var hasMove=false;
+    for(var r=0;r<ROWS&&!hasMove;r++)for(var c=0;c<COLS&&!hasMove;c++)
+        if(board[r][c]&&board[r][c].color===currentPlayer&&getValidMoves(r,c).length>0)hasMove=true;
+    if(!hasMove){showWin((currentPlayer==='black'?'⚪ Beyaz':'⚫ Siyah')+' Kazandı!','Hamle hakkı yok');return;}
+    document.getElementById('status').textContent=(currentPlayer==='black'?'⚫ ':'⚪ ')+(currentPlayer==='black'?'Sıran':'AI düşünüyor...');
+    renderBoard();
+    if(gameMode==='ai'&&currentPlayer==='white'&&!aiThinking)runAI();
+}
+
+function updateScore(){
+    var bc=0,wc=0;
+    for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){
+        if(board[r][c]&&board[r][c].color==='black')bc++;
+        if(board[r][c]&&board[r][c].color==='white')wc++;
+    }
+    document.getElementById('p1c').textContent=bc+' taş';
+    document.getElementById('p2c').textContent=wc+' taş';
+    document.getElementById('p1').classList.toggle('active',currentPlayer==='black');
+    document.getElementById('p2').classList.toggle('active',currentPlayer==='white');
+}
+
+function showWin(text,sub){
+    document.getElementById('winnerText').textContent='🏆 '+text;
+    document.getElementById('winnerSub').textContent=sub;
+    document.getElementById('overlay').classList.add('show');
+}
+
+function resetGame(){
+    history=[];initBoard();currentPlayer='black';selected=null;mustJump=false;jumpPiece=null;aiThinking=false;
+    var p2=document.getElementById('p2n');p2.textContent=gameMode==='ai'?'⚪ AI':'⚪ Oyuncu 2';
+    document.getElementById('status').textContent='⚫ Sıran';
+    document.getElementById('overlay').classList.remove('show');renderBoard();
+}
+
+// ─── AI ───
+function runAI(){
+    aiThinking=true;
+    document.getElementById('status').textContent='⚪ AI düşünüyor...';
+    setTimeout(function(){aiMove();aiThinking=false;},500);
+}
+
+function aiMove(){
+    // Zorunlu zıplama kontrolü
+    if(hasAnyJumps('white')){
+        for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){
+            if(board[r][c]&&board[r][c].color==='white'){
+                var jm=getValidMoves(r,c).filter(function(m){return m.isJump;});
+                if(jm.length>0){
+                    var best=jm[0];var bestScore=-999;
+                    for(var j=0;j<jm.length;j++){
+                        var sc=0;
+                        if(jm[j].captured){var cp=board[jm[j].captured.r][jm[j].captured.c];if(cp&&cp.king)sc+=5;else sc+=3;}
+                        if(board[jm[j].r][jm[j].c]&&board[jm[j].r][jm[j].c].king)sc+=1;
+                        if(sc>bestScore){bestScore=sc;best=jm[j];}
                     }
+                    board[best.r][best.c]=board[r][c];board[r][c]=null;
+                    board[best.captured.r][best.captured.c]=null;
+                    promote(best.r,best.c);
+                    var next=getValidMoves(best.r,best.c).filter(function(m){return m.isJump;});
+                    if(next.length>0){jumpPiece={r:best.r,c:best.c};mustJump=true;renderBoard();aiMove();return;}
+                    mustJump=false;jumpPiece=null;selected=null;
+                    switchPlayer();return;
                 }
             }
         }
+    }
 
-        function getValidMoves(r, c) {
-            var piece = board[r][c];
-            if (!piece) return [];
-            var moves = [];
-            var dirs;
-            if (piece.king) dirs = [[-1,-1],[-1,1],[1,-1],[1,1]];
-            else if (piece.color === 'black') dirs = [[-1,-1],[-1,1]];
-            else dirs = [[1,-1],[1,1]];
-
-            for (var i = 0; i < dirs.length; i++) {
-                var dr = dirs[i][0], dc = dirs[i][1];
-                var nr = r + dr, nc = c + dc;
-                if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
-                    if (!board[nr][nc]) {
-                        moves.push({ r: nr, c: nc, isJump: false });
-                    } else if (board[nr][nc].color !== piece.color) {
-                        var jr = nr + dr, jc = nc + dc;
-                        if (jr >= 0 && jr < ROWS && jc >= 0 && jc < COLS && !board[jr][jc]) {
-                            moves.push({ r: jr, c: jc, isJump: true, captured: { r: nr, c: nc } });
-                        }
-                    }
+    // Normal hamle
+    var candidates=[];
+    for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){
+        if(board[r][c]&&board[r][c].color==='white'){
+            var mv=getValidMoves(r,c);
+            for(var m=0;m<mv.length;m++){
+                var sc=0;
+                if(!mv[m].isJump){
+                    sc+=Math.abs(3.5-mv[m].r)*0.3; // merkeze yakınlık
+                    if(mv[m].r===6)sc+=1; // kral olma yolunda
+                    // Rakip taşının yanına gitme
+                    if(board[mv[m].r+1]&&board[mv[m].r+1][mv[m].c]&&board[mv[m].r+1][mv[m].c].color==='black')sc+=0.5;
                 }
-            }
-            return moves;
-        }
-
-        function hasAnyJumps(color) {
-            for (var r = 0; r < ROWS; r++)
-                for (var c = 0; c < COLS; c++)
-                    if (board[r][c] && board[r][c].color === color)
-                        if (getValidMoves(r, c).some(function(m) { return m.isJump; }))
-                            return true;
-            return false;
-        }
-
-        function renderBoard() {
-            var el = document.getElementById('board');
-            el.innerHTML = '';
-            var highlightMoves = [];
-
-            if (selected) {
-                highlightMoves = getValidMoves(selected.r, selected.c);
-            }
-
-            for (var r = 0; r < ROWS; r++) {
-                for (var c = 0; c < COLS; c++) {
-                    var cell = document.createElement('div');
-                    cell.className = 'cell ' + ((r + c) % 2 === 0 ? 'light' : 'dark');
-
-                    if (selected && selected.r === r && selected.c === c) {
-                        cell.classList.add('sel');
-                    }
-
-                    var isMoveTarget = highlightMoves.find(function(m) { return m.r === r && m.c === c; });
-                    if (isMoveTarget) {
-                        cell.classList.add(isMoveTarget.isJump ? 'jp' : 'mv');
-                    }
-
-                    var piece = board[r][c];
-                    if (piece) {
-                        var pc = document.createElement('div');
-                        pc.className = 'pc ' + (piece.color === 'black' ? 'bk' : 'wh') + (piece.king ? ' king' : '');
-                        if (piece.king) pc.innerHTML = '👑';
-                        cell.appendChild(pc);
-                    }
-
-                    // Closure ile tıklama olayı
-                    (function(row, col) {
-                        cell.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            onCellClick(row, col);
-                        });
-                    })(r, c);
-
-                    el.appendChild(cell);
-                }
-            }
-            updateScore();
-        }
-
-        function onCellClick(r, c) {
-            // Zorunlu zıplama devam ediyorsa
-            if (mustJump && jumpPiece) {
-                var jMoves = getValidMoves(jumpPiece.r, jumpPiece.c).filter(function(m) { return m.isJump; });
-                var target = jMoves.find(function(m) { return m.r === r && m.c === c; });
-                if (target) {
-                    saveState();
-                    doJump(jumpPiece.r, jumpPiece.c, target);
-                } else {
-                    mustJump = false;
-                    jumpPiece = null;
-                    switchPlayer();
-                }
-                return;
-            }
-
-            var piece = board[r][c];
-
-            // Taş seçimi
-            if (piece && piece.color === currentPlayer) {
-                if (hasAnyJumps(currentPlayer)) {
-                    var moves = getValidMoves(r, c);
-                    if (moves.some(function(m) { return m.isJump; })) {
-                        selected = { r: r, c: c };
-                        renderBoard();
-                    }
-                    return;
-                }
-                selected = { r: r, c: c };
-                renderBoard();
-                return;
-            }
-
-            // Taşı taşıma
-            if (selected) {
-                var moves = getValidMoves(selected.r, selected.c);
-                var move = moves.find(function(m) { return m.r === r && m.c === c; });
-                if (move) {
-                    saveState();
-                    if (move.isJump) {
-                        doJump(selected.r, selected.c, move);
-                    } else {
-                        doMove(selected.r, selected.c, r, c);
-                    }
-                } else {
-                    selected = null;
-                    renderBoard();
-                }
+                candidates.push({fr:r,fc:c,tr:mv[m].r,tc:mv[m].c,score:sc,isJump:false});
             }
         }
+    }
 
-        function doMove(fr, fc, tr, tc) {
-            board[tr][tc] = board[fr][fc];
-            board[fr][fc] = null;
-            promote(tr, tc);
-            selected = null;
-            switchPlayer();
-        }
+    if(candidates.length===0)return;
+    candidates.sort(function(a,b){return b.score-a.score;});
+    // Üst %30'dan rastgele seç (çeşitlilik için)
+    var topN=Math.max(1,Math.floor(candidates.length*0.3));
+    var pick=candidates[Math.floor(Math.random()*topN)];
+    board[pick.tc][pick.tr]=board[pick.fr][pick.fc];board[pick.fr][pick.fc]=null;
+    promote(pick.tc,pick.tr);selected=null;switchPlayer();
+}
 
-        function doJump(fr, fc, move) {
-            board[move.r][move.c] = board[fr][fc];
-            board[fr][fc] = null;
-            board[move.captured.r][move.captured.c] = null;
-            promote(move.r, move.c);
+// ─── Buton Binding ───
+document.getElementById('btnNew').addEventListener('click',resetGame);
+document.getElementById('btnAgain').addEventListener('click',function(){resetGame();});
+document.getElementById('btnUndo').addEventListener('click',function(){
+    if(history.length===0||aiThinking)return;
+    var prev=history.pop();
+    board=prev.board;currentPlayer=prev.player;selected=null;mustJump=false;jumpPiece=null;
+    document.getElementById('status').textContent=(currentPlayer==='black'?'⚫ Sıran':'⚪ AI düşünüyor...');
+    renderBoard();
+    if(gameMode==='ai'&&currentPlayer==='white')runAI();
+});
+document.getElementById('mAi').addEventListener('click',function(){gameMode='ai';document.getElementById('mAi').classList.add('active');document.getElementById('m2p').classList.remove('active');resetGame();});
+document.getElementById('m2p').addEventListener('click',function(){gameMode='2p';document.getElementById('m2p').classList.add('active');document.getElementById('mAi').classList.remove('active');resetGame();});
 
-            var next = getValidMoves(move.r, move.c).filter(function(m) { return m.isJump; });
-            if (next.length > 0) {
-                selected = { r: move.r, c: move.c };
-                mustJump = true;
-                jumpPiece = { r: move.r, c: move.c };
-                renderBoard();
-                return;
-            }
-            selected = null;
-            mustJump = false;
-            jumpPiece = null;
-            switchPlayer();
-        }
-
-        function promote(r, c) {
-            var p = board[r][c];
-            if (p && !p.king) {
-                if ((p.color === 'black' && r === 0) || (p.color === 'white' && r === 7)) {
-                    p.king = true;
-                }
-            }
-        }
-
-        function switchPlayer() {
-            currentPlayer = currentPlayer === 'black' ? 'white' : 'black';
-            selected = null;
-
-            var bc = 0, wc = 0;
-            for (var r = 0; r < ROWS; r++)
-                for (var c = 0; c < COLS; c++) {
-                    if (board[r][c] && board[r][c].color === 'black') bc++;
-                    if (board[r][c] && board[r][c].color === 'white') wc++;
-                }
-
-            if (bc === 0) { showWin('⚪ Beyaz Kazandı!', 'Tüm siyah taşlar yok edildi'); return; }
-            if (wc === 0) { showWin('⚫ Siyah Kazandı!', 'Tüm beyaz taşlar yok edildi'); return; }
-
-            var hasMove = false;
-            for (var r = 0; r < ROWS && !hasMove; r++)
-                for (var c = 0; c < COLS && !hasMove; c++)
-                    if (board[r][c] && board[r][c].color === currentPlayer && getValidMoves(r, c).length > 0)
-                        hasMove = true;
-
-            if (!hasMove) {
-                var winner = currentPlayer === 'black' ? '⚪ Beyaz' : '⚫ Siyah';
-                showWin(winner + ' Kazandı!', 'Hamle hakkı kalmadı');
-                return;
-            }
-
-            document.getElementById('status').textContent =
-                (currentPlayer === 'black' ? '⚫ Siyah' : '⚪ Beyaz') + "'ın sırası";
-            renderBoard();
-        }
-
-        function updateScore() {
-            var bc = 0, wc = 0;
-            for (var r = 0; r < ROWS; r++)
-                for (var c = 0; c < COLS; c++) {
-                    if (board[r][c] && board[r][c].color === 'black') bc++;
-                    if (board[r][c] && board[r][c].color === 'white') wc++;
-                }
-            document.getElementById('p1c').textContent = bc + ' taş';
-            document.getElementById('p2c').textContent = wc + ' taş';
-            document.getElementById('p1').classList.toggle('active', currentPlayer === 'black');
-            document.getElementById('p2').classList.toggle('active', currentPlayer === 'white');
-        }
-
-        function showWin(text, sub) {
-            document.getElementById('winnerText').textContent = '🏆 ' + text;
-            document.getElementById('winnerSub').textContent = sub;
-            document.getElementById('overlay').classList.add('show');
-        }
-
-        function undoMove() {
-            if (history.length === 0) return;
-            var prev = history.pop();
-            board = prev.board;
-            currentPlayer = prev.player;
-            selected = null;
-            mustJump = false;
-            jumpPiece = null;
-            document.getElementById('status').textContent =
-                (currentPlayer === 'black' ? '⚫ Siyah' : '⚪ Beyaz') + "'ın sırası";
-            renderBoard();
-        }
-
-        function resetGame() {
-            history = [];
-            initBoard();
-            currentPlayer = 'black';
-            selected = null;
-            mustJump = false;
-            jumpPiece = null;
-            document.getElementById('status').textContent = "⚫ Siyah'ın sırası";
-            document.getElementById('overlay').classList.remove('show');
-            renderBoard();
-        }
-
-        // ─── Buton olayları ───
-        document.getElementById('btnNew').addEventListener('click', resetGame);
-        document.getElementById('btnAgain').addEventListener('click', function() {
-            resetGame();
-        });
-        document.getElementById('btnUndo').addEventListener('click', undoMove);
-
-        resetGame();
-    })();
-    </script>
+resetGame();
+})();
+</script>
 </body>
 </html>
