@@ -50,10 +50,12 @@ var TontonSupabase = (function() {
         // Supabase client'ı oluştur
         if (typeof supabase !== 'undefined') {
             state.client = supabase.createClient(config.supabaseUrl, config.supabaseKey);
+            state.connected = true;
             console.log('[TontonSupabase] Initialized');
             return true;
         } else {
             console.warn('[TontonSupabase] Supabase JS not loaded');
+            state.connected = false;
             return false;
         }
     }
@@ -363,6 +365,9 @@ var TontonSupabase = (function() {
     }
     
     // ═══ PUBLIC API ═══
+    function isConnected() {
+        return state.client !== null && state.connected;
+    }
     return {
         init: init,
         registerUser: registerUser,
@@ -378,6 +383,7 @@ var TontonSupabase = (function() {
         onGameEnd: onGameEnd,
         joinTournament: joinTournament,
         getTournaments: getTournaments,
+        isConnected: isConnected,
         config: config,
         state: state
     };
