@@ -8,55 +8,74 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Segoe UI', sans-serif;
-            color: white;
-            padding: 20px;
+            min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; font-family: 'Segoe UI', sans-serif;
+            color: white; padding: 20px; gap: 20px;
         }
-        h1 { font-size: 36px; margin-bottom: 10px; text-shadow: 0 0 30px rgba(255,215,0,0.5); }
-        .subtitle { font-size: 16px; opacity: 0.7; margin-bottom: 40px; }
-        .games { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 500px; }
+        h1 { font-size: 32px; text-shadow: 0 0 30px rgba(255,215,0,0.5); margin-top: 20px; }
+        .subtitle { font-size: 14px; opacity: 0.6; }
+        .games { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; max-width: 400px; }
         .game-card {
-            width: 200px; padding: 30px 20px;
-            background: rgba(255,255,255,0.1);
-            border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-            color: white;
+            background: rgba(255,255,255,0.05); border-radius: 16px;
+            padding: 20px; text-decoration: none; color: white;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.2s, border-color 0.2s;
+            display: flex; align-items: center; gap: 16px;
         }
-        .game-card:hover {
-            transform: translateY(-5px);
-            border-color: gold;
-            box-shadow: 0 10px 30px rgba(255,215,0,0.2);
+        .game-card:active { transform: scale(0.97); }
+        .game-card:hover { border-color: rgba(255,215,0,0.4); }
+        .game-icon { font-size: 40px; }
+        .game-info h3 { font-size: 18px; margin-bottom: 4px; }
+        .game-info p { font-size: 12px; opacity: 0.6; }
+        .badge {
+            font-size: 10px; padding: 2px 8px; border-radius: 10px;
+            background: rgba(255,215,0,0.2); color: #FFD700;
+            display: inline-block; margin-top: 4px;
         }
-        .game-card .icon { font-size: 48px; margin-bottom: 15px; }
-        .game-card .name { font-size: 20px; font-weight: bold; margin-bottom: 8px; }
-        .game-card .desc { font-size: 12px; opacity: 0.7; }
-        .footer { margin-top: 40px; font-size: 12px; opacity: 0.4; }
     </style>
 </head>
 <body>
     <h1>🎮 GameKing</h1>
-    <p class="subtitle">Telegram Mini Oyunlar</p>
+    <p class="subtitle">Kültürel Mini Oyunlar</p>
+
     <div class="games">
-        <a class="game-card" href="./dama.html">
-            <div class="icon">🎲</div>
-            <div class="name">Dama</div>
-            <div class="desc">Klasik strateji oyunu 2 kişilik</div>
+        <a class="game-card" href="dama.html">
+            <div class="game-icon">🎲</div>
+            <div class="game-info">
+                <h3>Dama</h3>
+                <p>Klasik strateji oyunu - 8x8 tahta</p>
+                <span class="badge">👥 2 Kişi</span>
+            </div>
         </a>
-        <a class="game-card" href="./pingpong.html">
-            <div class="icon">🏓</div>
-            <div class="name">Ping Pong</div>
-            <div class="desc">Hızlı aksiyon - AI veya 2 kişilik</div>
+
+        <a class="game-card" href="pingpong.html">
+            <div class="game-icon">🏓</div>
+            <div class="game-info">
+                <h3>Ping Pong</h3>
+                <p>Hızlı ve eğlenceli - 2D / 3B seçeneği</p>
+                <span class="badge">🤖 AI veya 👥 2 Kişi</span>
+            </div>
+        </a>
+
+        <a class="game-card" href="tavla.html">
+            <div class="game-icon">🎲</div>
+            <div class="game-info">
+                <h3>Tavla</h3>
+                <p>Zar + strateji - Klasik Türk oyunu</p>
+                <span class="badge">👥 2 Kişi</span>
+            </div>
+        </a>
+
+        <a class="game-card" href="mangala.html">
+            <div class="game-icon">🌾</div>
+            <div class="game-info">
+                <h3>Mangala</h3>
+                <p>Taş toplama stratejisi - Afrika kökenli</p>
+                <span class="badge">👥 2 Kişi</span>
+            </div>
         </a>
     </div>
-    <p class="footer">GameKing © 2026 | TON Blockchain</p>
+
+    <p style="margin-top:20px;opacity:0.3;font-size:12px;">GameKing v1.0 - Telegram Mini App</p>
 </body>
 </html>
