@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🌾 Mangala King</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            background: linear-gradient(135deg, #1a3a2a, #0d2818);
+            min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; font-family: 'Segoe UI', sans-serif;
+            color: white; padding: 10px; gap: 12px; user-select: none;
+        }
+        h1 { font-size: 22px; text-shadow: 0 0 20px rgba(76,175,80,0.5); }
+        .info-bar {
+            display: flex; justify-content: space-between; width: 100%;
+            max-width: 400px; font-size: 14px;
+        }
+        .player { padding: 6px 14px; border-radius: 8px; background: rgba(255,255,255,0.08); }
+        .player.active { background: rgba(76,175,80,0.2); border: 1px solid #4CAF50; }
+        #board {
+            width: 100%; max-width: 400px; aspect-ratio: 2.5;
+            background: linear-gradient(135deg, #8B4513, #654321);
+            border-radius: 16px; padding: 8px; display: flex; flex-direction: column;
+            justify-content: space-between; border: 3px solid #a0522d;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+        }
+        .row { display: flex; gap: 4px; justify-content: center; }
+        .pit {
+            flex: 1; aspect-ratio: 1; max-width: 50px; min-width: 30px;
+            background: radial-gradient(circle, #2d1a0e, #1a0f08);
+            border-radius: 50%; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; cursor: pointer;
+            border: 2px solid #4a3020; position: relative; transition: all 0.2s;
+        }
+        .pit:active { transform: scale(0.95); }
+        .pit.selected { border-color: #4CAF50; box-shadow: 0 0 12px #4CAF50; }
+        .pit .count { font-size: 16px; font-weight: bold; }
+        .pit .seeds { font-size: 8px; position: absolute; }
+        .store {
+            width: 50px; max-width: 60px; background: radial-gradient(circle, #3d2a1a, #1a0f08);
+            border-radius: 12px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            border: 2px solid #6a4a30; cursor: pointer; min-width: 40px;
+        }
+        .store .count { font-size: 22px; font-weight: bold; color: #FFD700; }
+        .store.p0 { order: -1; }
+        .store.p1 { order: 1; }
+        .board-row {
+            display: flex; gap: 4px; align-items: center;
+            justify-content: center;
+        }
+        .label { font-size: 11px; opacity: 0.5; }
+        .btn {
+            padding: 10px 24px; font-size: 14px; border: none; border-radius: 16px;
+            cursor: pointer; font-weight: bold;
+        }
+        .btn-gold { background: linear-gradient(145deg, #FFD700, #FFA500); color: #1a1a2e; }
+        .btn-green { background: linear-gradient(145deg, #4CAF50, #2E7D32); color: white; }
+        .btn-red { background: linear-gradient(145deg, #f44336, #b71c1c); color: white; }
+        .btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        .status { font-size: 14px; padding: 6px 16px; background: rgba(255,255,255,0.08); border-radius: 14px; }
+        .overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85); z-index: 100;
+            align-items: center; justify-content: center; flex-direction: column; gap: 16px;
+        }
+        .overlay.show { display: flex; }
+        .overlay h2 { font-size: 28px; text-shadow: 0 0 30px gold; }
+    </style>
+</head>
+<body>
+    <h1>🌾 Mangala King</h1>
+    <div class="info-bar">
+        <div class="player active" id="p1">⚫ Oyuncu 1 <div style="font-size:11px;opacity:0.7" id="s0">Depo: 0</div></div>
+        <div class="player" id="p2">⚪ Oyuncu 2 <div style="font-size:11px;opacity:0.7" id="s1">Depo: 0</div></div>
+    </div>
+
+    <div id="board">
+        <!-- Üst sıra (Oyuncu 1'in delikleri) -->
+        <div class="board-row" style="flex-direction:row-reverse;">
+            <div class="store p1" id="store1"><div class="count" id="sv1">0</div><div class="label">⚪ Depo</div></div>
+            <div class="row" id="row1"></div>
+        </div>
+        <!-- Alt sıra (Oyuncu 2'nin delikleri) -->
+        <div class="board-row">
+            <div class="store p0" id="store0"><div class="count" id="sv0">0</div><div class="label">⚫ Depo</div></div>
+            <div class="row" id="row0"></div>
+        </div>
+    </div>
+
+    <div class="status" id="status">⚫ Oyuncu 1 - Bir deliğe tıkla!</div>
+    <div class="btn-row">
+        <button class="btn btn-gold" id="btnNew">🔄 Yeni Oyun</button>
+        <button class="btn btn-red" id="btnUndo">↩️ Geri Al</button>
+    </div>
+
+    <div class="overlay" id="overlay">
+        <h2 id="winText"></h2>
+        <button class="btn btn-green" id="btnAgain">🔄 Tekrar Oyna</button>
+    </div>
+
+    <script>
+    (function() {
+        // Mangala: 6 delik x 2 oyuncu + 2 depo
+        // Her delikte 4 taş başlangıçta
+        // Toplam 48 taş + depolar
+        var pits = []; // [oyuncu][delik] = taş sayısı
+        var stores = [0, 0];
+        var currentPlayer = 0;
+        var history = [];
+
+        function initGame() {
+            pits = [[4,4,4,4,4,4], [4,4,4,4,4,4]];
+            stores = [0, 0];
+            currentPlayer = 0;
+            history = [];
+            render();
+            updateStatus("⚫ Oyuncu 1 - Bir deliğe tıkla!");
+            document.getElementById('overlay').classList.remove('show');
+        }
+
+        function saveState() {
+            history.push({
+                pits: [pits[0].slice(), pits[1].slice()],
+                stores: stores.slice(),
+                player: currentPlayer
+            });
+            if (history.length > 30) history.shift();
+        }
+
+        function render() {
+            var row0 = document.getElementById('row0');
+            var row1 = document.getElementById('row1');
+            row0.innerHTML = '';
+            row1.innerHTML = '';
+
+            // Oyuncu 2 (alt sıra): soldan sağa 0-5
+            for (var i = 0; i < 6; i++) {
+                var pit = createPit(1, i);
+                row0.appendChild(pit);
+            }
+            // Oyuncu 1 (üst sıra): sağdan sola 5-0 (ters)
+            for (var i = 5; i >= 0; i--) {
+                var pit = createPit(0, i);
+                row1.appendChild(pit);
+            }
+
+            document.getElementById('sv0').textContent = stores[0];
+            document.getElementById('sv1').textContent = stores[1];
+            document.getElementById('s0').textContent = 'Depo: ' + stores[0];
+            document.getElementById('s1').textContent = 'Depo: ' + stores[1];
+            document.getElementById('p1').classList.toggle('active', currentPlayer === 0);
+            document.getElementById('p2').classList.toggle('active', currentPlayer === 1);
+        }
+
+        function createPit(player, index) {
+            var el = document.createElement('div');
+            el.className = 'pit';
+            el.innerHTML = '<div class="count">' + pits[player][index] + '</div>';
+            (function(p, i) {
+                el.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    onPitClick(p, i);
+                });
+            })(player, index);
+            return el;
+        }
+
+        function onPitClick(player, index) {
+            if (player !== currentPlayer) return;
+            if (pits[player][index] === 0) return;
+
+            saveState();
+
+            var count = pits[player][index];
+            pits[player][index] = 0;
+            var currentPit = index;
+            var currentRow = player;
+
+            for (var s = 0; s < count; s++) {
+                currentPit++;
+                if (currentPit >= 6) {
+                    // Depoya bırak
+                    if (currentRow === player && currentPit === 6) {
+                        stores[player]++;
+                        currentRow = currentRow === 0 ? 1 : 0;
+                        currentPit = -1;
+                        continue;
+                    }
+                    currentRow = currentRow === 0 ? 1 : 0;
+                    currentPit = 0;
+                }
+
+                // Taşı bırak
+                pits[currentRow][currentPit]++;
+            }
+
+            // Son taş kendi deliğine düştüyse (bonus tur)
+            var lastPlayer = currentRow;
+            var lastPit = currentPit;
+            var bonusTurn = false;
+
+            if (lastPlayer === currentPlayer && pits[lastPlayer][lastPit] === 1 && currentPit >= 0 && currentPit < 6) {
+                // Karşı deliğe taşı al
+                var opposite = 5 - currentPit;
+                var captured = pits[currentPlayer][opposite];
+                if (captured > 0) {
+                    pits[currentPlayer][opposite] = 0;
+                    stores[currentPlayer] += captured + 1;
+                    pits[currentPlayer][currentPit] = 0;
+                }
+            }
+
+            // Oyun bitti mi?
+            var total0 = 0, total1 = 0;
+            for (var i = 0; i < 6; i++) {
+                total0 += pits[0][i];
+                total1 += pits[1][i];
+            }
+
+            if (total0 === 0 || total1 === 0) {
+                // Kalan taşları topla
+                stores[0] += total0;
+                stores[1] += total1;
+                for (var i = 0; i < 6; i++) { pits[0][i] = 0; pits[1][i] = 0; }
+                render();
+                var winner = stores[0] > stores[1] ? '⚫ Oyuncu 1' : '⚪ Oyuncu 2';
+                if (stores[0] === stores[1]) winner = 'Berabere';
+                document.getElementById('winText').textContent = '🏆 ' + winner + ' Kazandı! (' + stores[0] + ' - ' + stores[1] + ')';
+                document.getElementById('overlay').classList.add('show');
+                return;
+            }
+
+            render();
+            updateStatus((currentPlayer === 0 ? '⚫ Oyuncu 1' : '⚪ Oyuncu 2') + ' - ' + stores[0] + ' vs ' + stores[1]);
+        }
+
+        function undoMove() {
+            if (history.length === 0) return;
+            var prev = history.pop();
+            pits = [prev.pits[0].slice(), prev.pits[1].slice()];
+            stores = prev.stores.slice();
+            currentPlayer = prev.player;
+            render();
+            updateStatus("Geri alındı - " + (currentPlayer === 0 ? '⚫ Oyuncu 1' : '⚪ Oyuncu 2'));
+        }
+
+        function updateStatus(msg) {
+            document.getElementById('status').textContent = msg;
+        }
+
+        document.getElementById('btnNew').addEventListener('click', initGame);
+        document.getElementById('btnAgain').addEventListener('click', initGame);
+        document.getElementById('btnUndo').addEventListener('click', undoMove);
+
+        initGame();
+    })();
+    </script>
+</body>
+</html>
