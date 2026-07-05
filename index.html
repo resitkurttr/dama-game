@@ -2,12 +2,12 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>🎲 Dama King</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 GameKing - Mini Oyunlar</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -15,393 +15,48 @@
             justify-content: center;
             font-family: 'Segoe UI', sans-serif;
             color: white;
-            overflow: hidden;
+            padding: 20px;
         }
-        h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-            text-shadow: 0 0 20px rgba(255,215,0,0.5);
-        }
-        .score-board {
-            display: flex;
-            gap: 40px;
-            margin-bottom: 15px;
-            font-size: 18px;
-        }
-        .score-board .player {
-            padding: 8px 20px;
-            border-radius: 10px;
+        h1 { font-size: 36px; margin-bottom: 10px; text-shadow: 0 0 30px rgba(255,215,0,0.5); }
+        .subtitle { font-size: 16px; opacity: 0.7; margin-bottom: 40px; }
+        .games { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 500px; }
+        .game-card {
+            width: 200px; padding: 30px 20px;
             background: rgba(255,255,255,0.1);
-        }
-        .score-board .player.active {
-            background: rgba(255,215,0,0.3);
-            border: 2px solid gold;
-        }
-        .score-board .pieces {
-            font-size: 14px;
-            opacity: 0.8;
-        }
-        #board {
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            gap: 2px;
-            padding: 8px;
-            background: #8B4513;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-        }
-        .cell {
-            width: 45px;
-            height: 45px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            border-radius: 5px;
-        }
-        .cell.light { background: #DEB887; }
-        .cell.dark { background: #8B4513; }
-        .cell.selected { background: #FFD700; box-shadow: 0 0 15px gold; }
-        .cell.valid-move { background: #4CAF50; box-shadow: 0 0 10px #4CAF50; }
-        .cell.valid-jump { background: #FF5722; box-shadow: 0 0 10px #FF5722; }
-        .piece {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            border: 3px solid rgba(255,255,255,0.3);
-            cursor: grab;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-        .piece.black {
-            background: linear-gradient(145deg, #2c2c2c, #1a1a1a);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-        }
-        .piece.white {
-            background: linear-gradient(145deg, #ffffff, #e0e0e0);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-        }
-        .piece.king {
-            border: 3px solid gold;
-            box-shadow: 0 0 15px gold;
-        }
-        .piece:hover { transform: scale(1.1); }
-        .status {
-            margin-top: 15px;
-            font-size: 18px;
-            padding: 10px 25px;
-            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.2);
             border-radius: 20px;
-        }
-        .btn {
-            margin-top: 15px;
-            padding: 10px 30px;
-            font-size: 16px;
-            border: none;
-            border-radius: 20px;
-            background: linear-gradient(145deg, #FFD700, #FFA500);
-            color: #1a1a2e;
+            text-align: center;
             cursor: pointer;
-            font-weight: bold;
-            transition: transform 0.2s;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: white;
         }
-        .btn:hover { transform: scale(1.05); }
-        .overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8);
-            z-index: 100;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
+        .game-card:hover {
+            transform: translateY(-5px);
+            border-color: gold;
+            box-shadow: 0 10px 30px rgba(255,215,0,0.2);
         }
-        .overlay.show { display: flex; }
-        .overlay h2 { font-size: 36px; margin-bottom: 20px; text-shadow: 0 0 30px gold; }
-        .overlay p { font-size: 20px; margin-bottom: 20px; }
-        @media (max-width: 400px) {
-            .cell { width: 38px; height: 38px; }
-            .piece { width: 30px; height: 30px; font-size: 14px; }
-        }
+        .game-card .icon { font-size: 48px; margin-bottom: 15px; }
+        .game-card .name { font-size: 20px; font-weight: bold; margin-bottom: 8px; }
+        .game-card .desc { font-size: 12px; opacity: 0.7; }
+        .footer { margin-top: 40px; font-size: 12px; opacity: 0.4; }
     </style>
 </head>
 <body>
-    <h1>🎲 Dama King</h1>
-    <div class="score-board">
-        <div class="player active" id="p1-info">
-            ⚫ Siyah
-            <div class="pieces" id="p1-pieces">12 taş</div>
-        </div>
-        <div class="player" id="p2-info">
-            ⚪ Beyaz
-            <div class="pieces" id="p2-pieces">12 taş</div>
-        </div>
+    <h1>🎮 GameKing</h1>
+    <p class="subtitle">Telegram Mini Oyunlar</p>
+    <div class="games">
+        <a class="game-card" href="./dama.html">
+            <div class="icon">🎲</div>
+            <div class="name">Dama</div>
+            <div class="desc">Klasik strateji oyunu 2 kişilik</div>
+        </a>
+        <a class="game-card" href="./pingpong.html">
+            <div class="icon">🏓</div>
+            <div class="name">Ping Pong</div>
+            <div class="desc">Hızlı aksiyon - AI veya 2 kişilik</div>
+        </a>
     </div>
-    <div id="board"></div>
-    <div class="status" id="status">⚫ Siyah'ın sırası</div>
-    <button class="btn" onclick="resetGame()">🔄 Yeni Oyun</button>
-
-    <div class="overlay" id="overlay">
-        <h2 id="winner-text"></h2>
-        <p id="winner-sub"></p>
-        <button class="btn" onclick="resetGame(); document.getElementById('overlay').classList.remove('show');">🔄 Tekrar Oyna</button>
-    </div>
-
-    <script>
-        const ROWS = 8, COLS = 8;
-        let board = [], selected = null, currentPlayer = 'black';
-        let mustJump = false, jumpPiece = null;
-
-        function initBoard() {
-            board = [];
-            for (let r = 0; r < ROWS; r++) {
-                board[r] = [];
-                for (let c = 0; c < COLS; c++) {
-                    if ((r + c) % 2 === 1) {
-                        if (r < 3) board[r][c] = { color: 'white', king: false };
-                        else if (r > 4) board[r][c] = { color: 'black', king: false };
-                        else board[r][c] = null;
-                    } else {
-                        board[r][c] = null;
-                    }
-                }
-            }
-        }
-
-        function renderBoard() {
-            const boardEl = document.getElementById('board');
-            boardEl.innerHTML = '';
-            for (let r = 0; r < ROWS; r++) {
-                for (let c = 0; c < COLS; c++) {
-                    const cell = document.createElement('div');
-                    cell.className = `cell ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
-                    cell.dataset.row = r;
-                    cell.dataset.col = c;
-
-                    if (selected && selected.r === r && selected.c === c) {
-                        cell.classList.add('selected');
-                    }
-
-                    const validMoves = getValidMoves(r, c);
-                    if (validMoves.length > 0 && validMoves.some(m => m.isJump)) {
-                        cell.classList.add('valid-jump');
-                    } else if (validMoves.length > 0) {
-                        cell.classList.add('valid-move');
-                    }
-
-                    const piece = board[r][c];
-                    if (piece) {
-                        const pieceEl = document.createElement('div');
-                        pieceEl.className = `piece ${piece.color}${piece.king ? ' king' : ''}`;
-                        pieceEl.textContent = piece.king ? '👑' : '';
-                        cell.appendChild(pieceEl);
-                    }
-
-                    cell.addEventListener('click', () => handleClick(r, c));
-                    boardEl.appendChild(cell);
-                }
-            }
-            updateScore();
-        }
-
-        function getValidMoves(r, c) {
-            const piece = board[r][c];
-            if (!piece) return [];
-            
-            const moves = [];
-            const dirs = piece.king ? [[-1,-1],[-1,1],[1,-1],[1,1]] :
-                         piece.color === 'black' ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]];
-            
-            for (const [dr, dc] of dirs) {
-                const nr = r + dr, nc = c + dc;
-                if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
-                    if (!board[nr][nc]) {
-                        moves.push({ r: nr, c: nc, isJump: false });
-                    } else if (board[nr][nc].color !== piece.color) {
-                        const jr = nr + dr, jc = nc + dc;
-                        if (jr >= 0 && jr < ROWS && jc >= 0 && jc < COLS && !board[jr][jc]) {
-                            moves.push({ r: jr, c: jc, isJump: true, captured: { r: nr, c: nc } });
-                        }
-                    }
-                }
-            }
-            return moves;
-        }
-
-        function hasAnyJumps(color) {
-            for (let r = 0; r < ROWS; r++)
-                for (let c = 0; c < COLS; c++)
-                    if (board[r][c] && board[r][c].color === color)
-                        if (getValidMoves(r, c).some(m => m.isJump))
-                            return true;
-            return false;
-        }
-
-        function handleClick(r, c) {
-            const piece = board[r][c];
-
-            // Zorunlu zıplama kontrolü
-            if (mustJump && jumpPiece) {
-                const moves = getValidMoves(jumpPiece.r, jumpPiece.c);
-                const jumpMoves = moves.filter(m => m.isJump);
-                const target = jumpMoves.find(m => m.r === r && m.c === c);
-                if (target) {
-                    executeJump(jumpPiece.r, jumpPiece.c, target);
-                    return;
-                }
-                // Başka zıplama yoksa sırayı değiştir
-                mustJump = false;
-                jumpPiece = null;
-                switchPlayer();
-                return;
-            }
-
-            if (piece && piece.color === currentPlayer) {
-                // Zorunlu zıplama varsa sadece zıplayan taşı seç
-                if (hasAnyJumps(currentPlayer)) {
-                    const moves = getValidMoves(r, c);
-                    if (moves.some(m => m.isJump)) {
-                        selected = { r, c };
-                        renderBoard();
-                        return;
-                    }
-                    return; // Bu taş zıplayamaz, başka taşı seç
-                }
-                selected = { r, c };
-                renderBoard();
-                return;
-            }
-
-            if (selected) {
-                const moves = getValidMoves(selected.r, selected.c);
-                const move = moves.find(m => m.r === r && m.c === c);
-                if (move) {
-                    if (move.isJump) {
-                        executeJump(selected.r, selected.c, move);
-                    } else {
-                        executeMove(selected.r, selected.c, r, c);
-                    }
-                } else {
-                    selected = null;
-                    renderBoard();
-                }
-            }
-        }
-
-        function executeMove(fromR, fromC, toR, toC) {
-            board[toR][toC] = board[fromR][fromC];
-            board[fromR][fromC] = null;
-            promoteKing(toR, toC);
-            selected = null;
-            switchPlayer();
-        }
-
-        function executeJump(fromR, fromC, move) {
-            board[move.r][move.c] = board[fromR][fromC];
-            board[fromR][fromC] = null;
-            board[move.captured.r][move.captured.c] = null;
-            promoteKing(move.r, move.c);
-
-            // Çoklu zıplama
-            const nextJumps = getValidMoves(move.r, move.c).filter(m => m.isJump);
-            if (nextJumps.length > 0) {
-                selected = { r: move.r, c: move.c };
-                mustJump = true;
-                jumpPiece = { r: move.r, c: move.c };
-                renderBoard();
-                return;
-            }
-
-            selected = null;
-            mustJump = false;
-            jumpPiece = null;
-            switchPlayer();
-        }
-
-        function promoteKing(r, c) {
-            const piece = board[r][c];
-            if (piece && !piece.king) {
-                if ((piece.color === 'black' && r === 0) || (piece.color === 'white' && r === 7)) {
-                    piece.king = true;
-                }
-            }
-        }
-
-        function switchPlayer() {
-            currentPlayer = currentPlayer === 'black' ? 'white' : 'black';
-            selected = null;
-            
-            // Kazananı kontrol et
-            let blackCount = 0, whiteCount = 0;
-            for (let r = 0; r < ROWS; r++)
-                for (let c = 0; c < COLS; c++) {
-                    if (board[r][c]?.color === 'black') blackCount++;
-                    if (board[r][c]?.color === 'white') whiteCount++;
-                }
-
-            if (blackCount === 0) {
-                showWinner('white');
-                return;
-            }
-            if (whiteCount === 0) {
-                showWinner('black');
-                return;
-            }
-
-            // Hamle var mı kontrol et
-            let hasMove = false;
-            for (let r = 0; r < ROWS && !hasMove; r++)
-                for (let c = 0; c < COLS && !hasMove; c++)
-                    if (board[r][c]?.color === currentPlayer && getValidMoves(r, c).length > 0)
-                        hasMove = true;
-
-            if (!hasMove) {
-                showWinner(currentPlayer === 'black' ? 'white' : 'black');
-                return;
-            }
-
-            document.getElementById('status').textContent =
-                `${currentPlayer === 'black' ? '⚫ Siyah' : '⚪ Beyaz'}'ın sırası`;
-            renderBoard();
-        }
-
-        function updateScore() {
-            let black = 0, white = 0;
-            for (let r = 0; r < ROWS; r++)
-                for (let c = 0; c < COLS; c++) {
-                    if (board[r][c]?.color === 'black') black++;
-                    if (board[r][c]?.color === 'white') white++;
-                }
-            document.getElementById('p1-pieces').textContent = `${black} taş`;
-            document.getElementById('p2-pieces').textContent = `${white} taş`;
-            document.getElementById('p1-info').classList.toggle('active', currentPlayer === 'black');
-            document.getElementById('p2-info').classList.toggle('active', currentPlayer === 'white');
-        }
-
-        function showWinner(color) {
-            const name = color === 'black' ? '⚫ Siyah' : '⚪ Beyaz';
-            document.getElementById('winner-text').textContent = `🏆 ${name} Kazandı!`;
-            document.getElementById('winner-sub').textContent = 'Tebrikler!';
-            document.getElementById('overlay').classList.add('show');
-        }
-
-        function resetGame() {
-            initBoard();
-            currentPlayer = 'black';
-            selected = null;
-            mustJump = false;
-            jumpPiece = null;
-            document.getElementById('status').textContent = "⚫ Siyah'ın sırası";
-            document.getElementById('overlay').classList.remove('show');
-            renderBoard();
-        }
-
-        // Başlat
-        resetGame();
-    </script>
+    <p class="footer">GameKing © 2026 | TON Blockchain</p>
 </body>
 </html>
