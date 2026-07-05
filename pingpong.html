@@ -100,8 +100,8 @@ function serve(){
   if(!G.serving)return;
   G.serving=false;
   var dir=G.server===0?-1:1;
-  G.bvx=(Math.random()-0.5)*3;
-  G.bvy=dir*(3+Math.random()*2);
+  G.bvx=(Math.random()-0.5)*2;
+  G.bvy=dir*(2+Math.random()*1.5);
   setMsg(G.server===0?'Sen servis attın!':'Rakip servis atıyor...');
 }
 
