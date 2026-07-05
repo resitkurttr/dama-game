@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Supabase Test</title>
+<style>
+body { background: #1a1a2e; color: #fff; font-family: monospace; padding: 20px; }
+.ok { color: #4CAF50; }
+.err { color: #f44336; }
+pre { background: #111; padding: 10px; border-radius: 8px; overflow-x: auto; }
+</style>
+</head>
+<body>
+<h2>🔗 Supabase Bağlantı Testi</h2>
+<div id="status">Bağlanıyor...</div>
+<pre id="log"></pre>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var log = document.getElementById('log');
+var status = document.getElementById('status');
+
+function addLog(msg) {
+    log.textContent += msg + '\n';
+}
+
+try {
+    var client = supabase.createClient(
+        'https://qkevfffrtsxvggcudqfz.supabase.co',
+        'sb_publishable_NVVmFW3LU96Yme-OgEWViw_laRIv7MU'
+    );
+    addLog('✅ Supabase client oluşturuldu');
+    
+    // Test: users tablosunu sorgula
+    client.from('users').select('*').limit(1).then(function(result) {
+        if (result.error) {
+            addLog('❌ Hata: ' + result.error.message);
+            status.innerHTML = '<span class="err">Bağlantı hatası</span>';
+        } else {
+            addLog('✅ Tablolar mevcut! Kullanıcı sayısı: ' + result.data.length);
+            status.innerHTML = '<span class="ok">Bağlantı başarılı!</span>';
+        }
+    });
+} catch(e) {
+    addLog('❌ Hata: ' + e.message);
+    status.innerHTML = '<span class="err">Bağlantı hatası</span>';
+}
+</script>
+</body>
+</html>
