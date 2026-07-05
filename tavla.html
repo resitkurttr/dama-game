@@ -233,7 +233,7 @@ function aiMoveStep(){
             if(target<25&&pieces[1][target]>1)continue;
             var sc=0;
             if(pieces[1][target]===0)sc+=2; // boş yere gitme
-            if(target===25){sc+=10;toplama bonusu}
+            if(target===25){sc+=10;}
             if(target===19||target===20||target===21)sc+=1; // eve yaklaş
             if(target>=19)sc+=3; // ev alanında
             if(sc>bestScore){bestScore=sc;bestMove={from:pt,to:target,diceIdx:d};}
