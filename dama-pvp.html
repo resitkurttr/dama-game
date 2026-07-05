@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>🎲 Dama PvP</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#1a1a2e;font-family:sans-serif;color:#fff}
+body{display:flex;flex-direction:column}
+#hdr{display:flex;justify-content:center;gap:6px;padding:6px;background:#111;flex-shrink:0}
+#hdr button{padding:5px 12px;border:none;border-radius:8px;font-size:12px;cursor:pointer;background:#222;color:#aaa}
+#hdr button.on{background:#FFD700;color:#000}
+#scr{display:flex;justify-content:center;gap:12px;padding:4px;background:#111;flex-shrink:0;font-size:14px;font-weight:bold}
+#scr span{padding:2px 12px;border-radius:6px;background:#1a1a2e}
+#scr .me{color:#FF5722}
+#scr .opp{color:#4CAF50}
+#game{flex:1;position:relative;overflow:hidden}
+#game canvas{display:block;width:100%;height:100%}
+#ctl{display:flex;justify-content:center;gap:8px;padding:8px;background:#111;flex-shrink:0}
+#ctl button{min-width:80px;height:44px;border:none;border-radius:10px;font-size:14px;cursor:pointer}
+#ctl .bs{background:#4CAF50;color:#fff;flex:1;max-width:160px}
+#ctl .bs.waiting{background:#FF9800}
+#ctl .bs.disabled{background:#555;color:#888;cursor:not-allowed}
+#msg{text-align:center;padding:2px;font-size:12px;color:#888;background:#0a0a1a;flex-shrink:0}
+#status{text-align:center;padding:4px;font-size:11px;color:#4CAF50;background:#111;flex-shrink:0}
+.win{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:50;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.win.show{display:flex}
+.win h2{font-size:22px}
+.win button{padding:10px 24px;border:none;border-radius:10px;background:#4CAF50;color:#fff;font-size:14px;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="hdr">
+  <button class="on" id="mAi">🤖 AI</button>
+  <button id="mPvP">🌐 PvP Online</button>
+</div>
+<div id="scr"><span class="me">Sen: 12</span><span class="opp">Rakip: 12</span></div>
+<div id="game"></div>
+<div id="ctl">
+  <button class="bs" id="bS">🔍 Eşleş</button>
+</div>
+<div id="status">AI modu — Taşa tıkla</div>
+<div id="msg">Kendi taşlarını seç, hamle yap</div>
+<div class="win" id="win"><h2 id="wT"></h2><button id="bR2">🔄 Tekrar</button></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
+<script src="supabase-integration.js"></script>
+<script>
+// ════════════════════════════════════════════════
+//  DAMA PvP — Supabase Realtime Multiplayer
+// ════════════════════════════════════════════════
+var G={
+  ROWS:8, COLS:8,
+  board:[], selected:null, currentPlayer:'black',
+  mustJump:false, jumpPiece:null, history:[],
+  // PvP state
+  pvp:false, gameId:null, myPlayerNum:null, opponentId:null,
+  connected:false, syncPending:false,
+  myColor:null, // 'black' or 'white'
+  aiThinking:false,
+  cvs:null, cx:null
+};
+
+function init(){
+  var box=document.getElementById('game');
+  G.cvs=document.createElement('canvas');
+  box.appendChild(G.cvs);
+  G.cx=G.cvs.getContext('2d');
+  resize();
+  initBoard();
+  renderBoard();
+  bindUI();
+  initSupabase();
+}
+
+function resize(){
+  var box=document.getElementById('game');
+  G.cvs.width=box.clientWidth;
+  G.cvs.height=box.clientHeight;
+  renderBoard();
+}
+
+function initBoard(){
+  G.board=[];
+  for(var r=0;r<G.ROWS;r++){
+    G.board[r]=[];
+    for(var c=0;c<G.COLS;c++){
+      if((r+c)%2===1){
+        if(r<3) G.board[r][c]={color:'white', king:false};
+        else if(r>4) G.board[r][c]={color:'black', king:false};
+        else G.board[r][c]=null;
+      }else G.board[r][c]=null;
+    }
+  }
+  G.currentPlayer='black';
+  G.selected=null;
+  G.mustJump=false;
+  G.jumpPiece=null;
+  G.history=[];
+  updateScore();
+}
+
+function getValidMoves(r,c){
+  var piece=G.board[r][c]; if(!piece) return [];
+  var moves=[], dirs;
+  if(piece.king) dirs=[[-1,-1],[-1,1],[1,-1],[1,1]];
+  else if(piece.color==='black') dirs=[[-1,-1],[-1,1]];
+  else dirs=[[1,-1],[1,1]];
+  for(var i=0;i<dirs.length;i++){
+    var dr=dirs[i][0], dc=dirs[i][1], nr=r+dr, nc=c+dc;
+    if(nr>=0&&nr<G.ROWS&&nc>=0&&nc<G.COLS){
+      if(!G.board[nr][nc]) moves.push({r:nr,c:nc,isJump:false});
+      else if(G.board[nr][nc].color!==piece.color){
+        var jr=nr+dr, jc=nc+dc;
+        if(jr>=0&&jr<G.ROWS&&jc>=0&&jc<G.COLS&&!G.board[jr][jc])
+          moves.push({r:jr,c:jc,isJump:true,captured:{r:nr,c:nc}});
+      }
+    }
+  }
+  return moves;
+}
+
+function hasAnyJumps(color){
+  for(var r=0;r<G.ROWS;r++) for(var c=0;c<G.COLS;c++)
+    if(G.board[r][c]&&G.board[r][c].color===color&&getValidMoves(r,c).some(function(m){return m.isJump;})) return true;
+  return false;
+}
+
+function renderBoard(){
+  var el=document.getElementById('game');
+  var W=el.clientWidth, H=el.clientHeight;
+  var cx=G.cx;
+  cx.fillStyle='#1a1a2e'; cx.fillRect(0,0,W,H);
+  
+  var boardSize=Math.min(W-20, H-20);
+  var cellSize=boardSize/8;
+  var offsetX=(W-boardSize)/2;
+  var offsetY=(H-boardSize)/2;
+  
+  var hl=G.selected?getValidMoves(G.selected.r,G.selected.c):[];
+  
+  for(var r=0;r<G.ROWS;r++) for(var c=0;c<G.COLS;c++){
+    var x=offsetX+c*cellSize;
+    var y=offsetY+r*cellSize;
+    
+    cx.fillStyle=(r+c)%2===0?'#DEB887':'#8B4513';
+    cx.fillRect(x,y,cellSize,cellSize);
+    
+    if(G.selected&&G.selected.r===r&&G.selected.c===c){
+      cx.fillStyle='#FFD700'; cx.fillRect(x,y,cellSize,cellSize);
+    }
+    
+    var isMv=hl.find(function(m){return m.r===r&&m.c===c;});
+    if(isMv){
+      cx.fillStyle=isMv.isJump?'rgba(255,87,34,0.7)':'rgba(76,175,80,0.7)';
+      cx.beginPath();
+      cx.arc(x+cellSize/2,y+cellSize/2,cellSize*0.26,0,Math.PI*2);
+      cx.fill();
+    }
+    
+    var piece=G.board[r][c];
+    if(piece){
+      var pcSize=cellSize*0.7;
+      var pcX=x+(cellSize-pcSize)/2;
+      var pcY=y+(cellSize-pcSize)/2;
+      cx.fillStyle=piece.color==='black'?'#3a3a3a':'#fff';
+      cx.strokeStyle=piece.color==='black'?'#111':'#ccc';
+      cx.lineWidth=2;
+      cx.beginPath();
+      cx.arc(x+cellSize/2,y+cellSize/2,pcSize/2,0,Math.PI*2);
+      cx.fill(); cx.stroke();
+      if(piece.king){
+        cx.fillStyle='gold';
+        cx.font='bold '+(pcSize*0.5)+'px sans-serif';
+        cx.textAlign='center'; cx.textBaseline='middle';
+        cx.fillText('♔',x+cellSize/2,y+cellSize/2+pcSize*0.05);
+      }
+    }
+  }
+  updateScore();
+}
+
+function onCellClick(r,c){
+  if(G.aiThinking) return;
+  if(G.pvp && G.currentPlayer!==G.myColor) return; // Not my turn
+  
+  if(G.mustJump&&G.jumpPiece){
+    var jm=getValidMoves(G.jumpPiece.r,G.jumpPiece.c).filter(function(m){return m.isJump;});
+    var tgt=jm.find(function(m){return m.r===r&&m.c===c;});
+    if(tgt){ saveState(); doJump(G.jumpPiece.r,G.jumpPiece.c,tgt); }
+    else { G.mustJump=false; G.jumpPiece=null; switchPlayer(); }
+    return;
+  }
+  
+  var piece=G.board[r][c];
+  if(piece&&piece.color===G.currentPlayer){
+    if(hasAnyJumps(G.currentPlayer)){
+      var mv=getValidMoves(r,c);
+      if(mv.some(function(m){return m.isJump;})){ G.selected={r:r,c:c}; renderBoard(); }
+      return;
+    }
+    G.selected={r:r,c:c}; renderBoard(); return;
+  }
+  
+  if(G.selected){
+    var mv=getValidMoves(G.selected.r,G.selected.c);
+    var move=mv.find(function(m){return m.r===r&&m.c===c;});
+    if(move){ saveState(); if(move.isJump) doJump(G.selected.r,G.selected.c,move); else doMove(G.selected.r,G.selected.c,r,c); }
+    else { G.selected=null; renderBoard(); }
+  }
+}
+
+function doMove(fr,fc,tr,tc){
+  G.board[tr][tc]=G.board[fr][fc];
+  G.board[fr][fc]=null;
+  promote(tr,tc);
+  G.selected=null;
+  switchPlayer();
+}
+
+function doJump(fr,fc,move){
+  G.board[move.r][move.c]=G.board[fr][fc];
+  G.board[fr][fc]=null;
+  G.board[move.captured.r][move.captured.c]=null;
+  promote(move.r,move.c);
+  var next=getValidMoves(move.r,move.c).filter(function(m){return m.isJump;});
+  if(next.length>0){
+    G.selected={r:move.r,c:move.c};
+    G.mustJump=true; G.jumpPiece={r:move.r,c:move.c};
+    renderBoard(); return;
+  }
+  G.selected=null; G.mustJump=false; G.jumpPiece=null; switchPlayer();
+}
+
+function promote(r,c){
+  var p=G.board[r][c];
+  if(p&&!p.king){
+    if((p.color==='black'&&r===0)||(p.color==='white'&&r===7)) p.king=true;
+  }
+}
+
+function switchPlayer(){
+  G.currentPlayer=G.currentPlayer==='black'?'white':'black';
+  G.selected=null;
+  var bc=0,wc=0;
+  for(var r=0;r<G.ROWS;r++) for(var c=0;c<G.COLS;c++){
+    if(G.board[r][c]&&G.board[r][c].color==='black') bc++;
+    if(G.board[r][c]&&G.board[r][c].color==='white') wc++;
+  }
+  if(bc===0){ showWin('⚪ Beyaz Kazandı!','Tüm taşlar yok edildi'); return; }
+  if(wc===0){ showWin('⚫ Siyah Kazandı!','Tüm taşlar yok edildi'); return; }
+  var hasMove=false;
+  for(var r=0;r<G.ROWS&&!hasMove;r++) for(var c=0;c<G.COLS&&!hasMove;c++)
+    if(G.board[r][c]&&G.board[r][c].color===G.currentPlayer&&getValidMoves(r,c).length>0) hasMove=true;
+  if(!hasMove){ showWin((G.currentPlayer==='black'?'⚪ Beyaz':'⚫ Siyah')+' Kazandı!','Hamle hakkı yok'); return; }
+  
+  var isMyTurn = (!G.pvp) || (G.currentPlayer===G.myColor);
+  var label = G.currentPlayer==='black'?'⚫ ':'⚪ ';
+  document.getElementById('status').textContent=status').textContent=label+(isMyTurn?'Sıran':(G.pvp?'Rakip oynuyor...':'AI düşünüyor...'));
+  renderBoard();
+  
+  if(!G.pvp && G.ai && G.currentPlayer==='white') runAI();
+  if(G.pvp) sendState({currentPlayer:G.currentPlayer, board:serializeBoard()});
+}
+
+function serializeBoard(){
+  var s=[];
+  for(var r=0;r<G.ROWS;r++){
+    s[r]=[];
+    for(var c=0;c<G.COLS;c++){
+      var p=G.board[r][c];
+      s[r][c]=p?{color:p.color,king:p.king}:null;
+    }
+  }
+  return s;
+}
+
+function updateScore(){
+  var bc=0,wc=0;
+  for(var r=0;r<G.ROWS;r++) for(var c=0;c<G.COLS;c++){
+    if(G.board[r][c]&&G.board[r][c].color==='black') bc++;
+    if(G.board[r][c]&&G.board[r][c].color==='white') wc++;
+  }
+  var sp=document.querySelectorAll('#scr span');
+  sp[0].textContent=(G.myColor==='black'?'Sen: ':'Rakip: ')+bc;
+  sp[1].textContent=(G.myColor==='white'?'Sen: ':'Rakip: ')+wc;
+}
+
+function showWin(text,sub){
+  document.getElementById('wT').textContent='🏆 '+text;
+  document.getElementById('win').classList.add('show');
+}
+
+function resetGame(){
+  initBoard();
+  G.currentPlayer='black';
+  document.getElementById('status').textContent='⚫ Sıran';
+  document.getElementById('win').classList.remove('show');
+  if(G.pvp && G.gameId){
+    if(window.TontonSupabase){
+      window.TontonSupabase.endGame(G.gameId, G.myPlayerNum===0?G.config.userId:null, {player1:0,player2:0});
+    }
+    leaveGame();
+  }
+}
+
+function saveState(){
+  var s=[];
+  for(var r=0;r<G.ROWS;r++){ s[r]=[]; for(var c=0;c<G.COLS;c++){ var p=G.board[r][c]; s[r][c]=p?{color:p.color,king:p.king}:null; } }
+  G.history.push({board:s, player:G.currentPlayer, mustJump:G.mustJump, jumpPiece:G.jumpPiece?{r:G.jumpPiece.r,c:G.jumpPiece.c}:null});
+  if(G.history.length>50) G.history.shift();
+}
+
+function bindUI(){
+  G.cvs.onclick=function(e){
+    var rect=G.cvs.getBoundingClientRect();
+    var cellSize=rect.width/8;
+    var c=Math.floor((e.clientX-rect.left)/cellSize);
+    var r=Math.floor((e.clientY-rect.top)/cellSize);
+    if(r>=0&&r<8&&c>=0&&c<8) onCellClick(r,c);
+  };
+  
+  document.getElementById('bS').onclick=serve;
+  
+  document.getElementById('mAi').onclick=function(){
+    G.ai=true; G.pvp=false;
+    this.classList.add('on'); document.getElementById('mPvP').classList.remove('on');
+    document.getElementById('status').textContent='AI modu — Taşa tıkla';
+    resetGame();
+  };
+  
+  document.getElementById('mPvP').onclick=function(){
+    if(!window.TontonSupabase || !window.TontonSupabase.isConnected()){
+      document.getElementById('status').textContent='Supabase bağlı değil';
+      return;
+    }
+    G.ai=false; G.pvp=true;
+    this.classList.add('on'); document.getElementById('mAi').classList.remove('on');
+    document.getElementById('status').textContent='Eşleşme aranıyor...';
+    findPvPMatch();
+  };
+  
+  document.getElementById('bR2').onclick=resetGame;
+  window.onresize=resize;
+}
+
+// ═══ AI ═══
+function runAI(){
+  G.aiThinking=true;
+  document.getElementById('status').textContent='⚪ AI düşünüyor...';
+  setTimeout(function(){ aiMove(); G.aiThinking=false; },500);
+}
+
+function aiMove(){
+  if(hasAnyJumps('white')){
+    for(var r=0;r<G.ROWS;r++) for(var c=0;c<G.COLS;c++){
+      if(G.board[r][c]&&G.board[r][c].color==='white'){
+        var jm=getValidMoves(r,c).filter(function(m){return m.isJump;});
+        if(jm.length>0){
+          var best=jm[0], bestScore=-999;
+          for(var j=0;j<jm.length;j++){
+            var sc=0;
+            if(jm[j].captured){ var cp=G.board[jm[j].captured.r][jm[j].captured.c]; if(cp&&cp.king) sc+=5; else sc+=3; }
+            if(G.board[jm[j].r][jm[j].c]&&G.board[jm[j].r][jm[j].c].king) sc+=1;
+            if(sc>bestScore){ bestScore=sc; best=jm[j]; }
+          }
+          G.board[best.r][best.c]=G.board[r][c]; G.board[r][c]=null;
+          G.board[best.captured.r][best.captured.c]=null;
+          promote(best.r,best.c);
+          var next=getValidMoves(best.r,best.c).filter(function(m){return m.isJump;});
+          if(next.length>0){ G.jumpPiece={r:best.r,c:best.c}; G.mustJump=true; renderBoard(); aiMove(); return; }
+          G.mustJump=false; G.jumpPiece=null; G.selected=null;
+          switchPlayer(); return;
+        }
+      }
+    }
+  }
+  
+  var candidates=[];
+  for(var r=0;r<G.ROWS;r++) for(var c=0;c<G.COLS;c++){
+    if(G.board[r][c]&&G.board[r][c].color==='white'){
+      var mv=getValidMoves(r,c);
+      for(var m=0;m<mv.length;m++){
+        var sc=0;
+        if(!mv[m].isJump){
+          sc+=Math.abs(3.5-mv[m].r)*0.3;
+          if(mv[m].r===6) sc+=1;
+          if(G.board[mv[m].r+1]&&G.board[mv[m].r+1][mv[m].c]&&G.board[mv[m].r+1][mv[m].c].color==='black') sc+=0.5;
+        }
+        candidates.push({fr:r,fc:c,tr:mv[m].r,tc:mv[m].c,score:sc,isJump:false});
+      }
+    }
+  }
+  if(candidates.length===0) return;
+  candidates.sort(function(a,b){return b.score-a.score;});
+  var topN=Math.max(1,Math.floor(candidates.length*0.3));
+  var pick=candidates[Math.floor(Math.random()*topN)];
+  G.board[pick.tr][pick.tc]=G.board[pick.fr][pick.fc];
+  G.board[pick.fr][pick.fc]=null;
+  promote(pick.tr,pick.tc);
+  G.selected=null; switchPlayer();
+}
+
+// ═══ SUPABASE PvP ═══
+function initSupabase(){
+  if(!window.TontonSupabase) return;
+  window.TontonSupabase.init({});
+  var tgId=697527694+Math.floor(Math.random()*1000);
+  window.TontonSupabase.registerUser(tgId, 'player_'+tgId, 'Oyuncu '+tgId).then(function(user){
+    if(user) G.config={userId:user.id};
+    console.log('[PvP] User ready:', user?.id);
+  });
+}
+
+function serve(){
+  if(!G.pvp) return;
+  findPvPMatch();
+}
+
+function findPvPMatch(){
+  if(!window.TontonSupabase || !G.config?.userId) return;
+  window.TontonSupabase.findMatch('dama').then(function(result){
+    if(!result) return;
+    if(result.status==='waiting'){
+      document.getElementById('status').textContent='Rakip bekleniyor...';
+      document.getElementById('bS').classList.add('waiting');
+      document.getElementById('bS').disabled=true;
+    }else if(result.status==='matched' && result.game){
+      onGameMatched(result.game);
+    }
+  });
+}
+
+function onGameMatched(game){
+  G.gameId=game.id;
+  G.myPlayerNum=game.player1_id===G.config.userId?0:1;
+  G.opponentId=G.myPlayerNum===0?game.player2_id:game.player1_id;
+  G.myColor=G.myPlayerNum===0?'black':'white';
+  G.currentPlayer='black';
+  
+  document.getElementById('status').textContent='Oyun başladı! Sen '+(G.myColor==='black'?'⚫ (siyah)':'⚪ (beyaz)');
+  document.getElementById('bS').classList.remove('waiting');
+  document.getElementById('bS').disabled=false;
+  document.getElementById('msg').textContent=G.myColor==='black'?'Sıran - Taşa tıkla':'Rakip oynuyor...';
+  
+  window.TontonSupabase.subscribeToGame(G.gameId, onGameStateUpdate);
+}
+
+function onGameStateUpdate(payload){
+  if(!payload || !payload.state) return;
+  var state=typeof payload.state==='string'?JSON.parse(payload.state):payload.state;
+  
+  if(state.currentPlayer) G.currentPlayer=state.currentPlayer;
+  if(state.board) { G.board=deserializeBoard(state.board); renderBoard(); }
+  if(state.mustJump!==undefined) G.mustJump=state.mustJump;
+  if(state.jumpPiece) G.jumpPiece=state.jumpPiece;
+  
+  var isMyTurn = G.currentPlayer===G.myColor;
+  var label = G.currentPlayer==='black'?'⚫ ':'⚪ ';
+  document.getElementById('status').textContent=label+(isMyTurn?'Sıran':'Rakip oynuyor...');
+  document.getElementById('msg').textContent=isMyTurn?'Sıran - Taşa tıkla':'Rakip oynuyor...';
+}
+
+function deserializeBoard(s){
+  var b=[];
+  for(var r=0;r<G.ROWS;r++){
+    b[r]=[];
+    for(var c=0;c<G.COLS;c++){
+      var p=s[r][c];
+      b[r][c]=p?{color:p.color,king:p.king}:null;
+    }
+  }
+  return b;
+}
+
+function sendState(update){
+  if(!G.pvp || !G.gameId || !window.TontonSupabase) return;
+  if(G.syncPending) return;
+  G.syncPending=true;
+  
+  var fullState={
+    currentPlayer:G.currentPlayer,
+    board:serializeBoard(),
+    mustJump:G.mustJump,
+    jumpPiece:G.jumpPiece
+  };
+  Object.assign(fullState, update);
+  
+  window.TontonSupabase.updateGameState(G.gameId, fullState).then(function(){
+    G.syncPending=false;
+  });
+}
+
+function leaveGame(){
+  if(G.gameId && window.TontonSupabase){
+    window.TontonSupabase.unsubscribeFromGame();
+  }
+  G.gameId=null; G.myPlayerNum=null; G.opponentId=null; G.pvp=false; G.myColor=null;
+}
+
+function endGame(winner){
+  if(!G.gameId || !window.TontonSupabase) return;
+  var winnerId=winner===G.myPlayerNum?G.config.userId:G.opponentId;
+  window.TontonSupabase.endGame(G.gameId, winnerId, {player1:0,player2:0});
+}
+
+// START
+init();
+</script>
+</body>
+</html>
