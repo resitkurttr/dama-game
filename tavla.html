@@ -80,34 +80,34 @@ function setP(p,i,v){pts[p*25+i]=v;}
 function draw(){
     svg.innerHTML='';
     // Arka plan
-    add(svg,'rect',{x:0,y:0,width:500,height:320,fill:'#3d2817',rx:8});
-    add(svg,'rect',{x:4,y:4,width:492,height:312,fill:'#654321',rx:6,stroke:'#8B4513',strokeWidth:2});
+    add('rect',{x:0,y:0,width:500,height:320,fill:'#3d2817',rx:8});
+    add('rect',{x:4,y:4,width:492,height:312,fill:'#654321',rx:6,stroke:'#8B4513',strokeWidth:2});
 
     // 24 nokta (+ bar)
     for(var i=1;i<=24;i++){
         var px=nx(i),top=i>=13;
         var c=i%2===0?'#c0392b':'#ecf0f1';
         if(top){
-            add(svg,'polygon',{points:px+',14 '+(px-16)+',150 '+(px+16)+',150',fill:c,opacity:0.85});
+            add('polygon',{points:px+',14 '+(px-16)+',150 '+(px+16)+',150',fill:c,opacity:0.85});
         }else{
-            add(svg,'polygon',{points:px+',306 '+(px-16)+',170 '+(px+16)+',170',fill:c,opacity:0.85});
+            add('polygon',{points:px+',306 '+(px-16)+',170 '+(px+16)+',170',fill:c,opacity:0.85});
         }
         // Nokta numarası
         var ty=top?10:316;
-        add(svg,'text',{x:px,y:ty,textAnchor:'middle',fill:'rgba(255,255,255,0.3)',fontSize:7},String(i));
+        add('text',{x:px,y:ty,textAnchor:'middle',fill:'rgba(255,255,255,0.3)',fontSize:7},String(i));
 
         // Taşları çiz
         drawStones(i,px,top);
     }
 
     // Bar (orta çizgi)
-    add(svg,'rect',{x:242,y:4,width:16,height:312,fill:'#4a3525'});
+    add('rect',{x:242,y:4,width:16,height:312,fill:'#4a3525'});
 
     // Seçili nokta vurgusu
     if(sel>0){
         var sx=nx(sel);
         var sy=sel>=13?12:168;
-        add(svg,'rect',{x:sx-18,y:sy,width:36,height:140,fill:'none',stroke:'#FFD700',strokeWidth:3,rx:4,opacity:0.8});
+        add('rect',{x:sx-18,y:sy,width:36,height:140,fill:'none',stroke:'#FFD700',strokeWidth:3,rx:4,opacity:0.8});
     }
 
     // Dışarı (borne) taşları
@@ -115,11 +115,11 @@ function draw(){
     drawBorne(1,470,240);
 
     // Ev (bar) alanı
-    add(svg,'rect',{x:215,y:135,width:70,height:50,fill:'#2a1a10',rx:4,stroke:'#FFD700',strokeWidth:1,opacity:0.5});
+    add('rect',{x:215,y:135,width:70,height:50,fill:'#2a1a10',rx:4,stroke:'#FFD700',strokeWidth:1,opacity:0.5});
     var t0=getP(0,25);
     if(t0>0){
-        add(svg,'circle',{cx:250,cy:155,r:10,fill:'#f0e6d0',stroke:'#c4a882',strokeWidth:1.5});
-        if(t0>1)add(svg,'text',{x:250,y:159,textAnchor:'middle',fill:'#333',fontSize:9,fontWeight:'bold'},String(t0));
+        add('circle',{cx:250,cy:155,r:10,fill:'#f0e6d0',stroke:'#c4a882',strokeWidth:1.5});
+        if(t0>1)add('text',{x:250,y:159,textAnchor:'middle',fill:'#333',fontSize:9,fontWeight:'bold'},String(t0));
     }
 }
 
@@ -135,17 +135,17 @@ function drawStones(point,px,top){
     // Siyah taşlar (oyuncu 1)
     for(var j=0;j<c1;j++){
         var cy=startY+dir*j*21;
-        add(svg,'circle',{cx:px,cy:cy,r:9,fill:'#1a1a1a',stroke:'#555',strokeWidth:1.5});
+        add('circle',{cx:px,cy:cy,r:9,fill:'#1a1a1a',stroke:'#555',strokeWidth:1.5});
         if(c1>5&&j===Math.floor(c1/2)){
-            add(svg,'text',{x:px,y:cy+3,textAnchor:'middle',fill:'#FFD700',fontSize:8,fontWeight:'bold'},String(c1));
+            add('text',{x:px,y:cy+3,textAnchor:'middle',fill:'#FFD700',fontSize:8,fontWeight:'bold'},String(c1));
         }
     }
     // Beyaz taşlar (oyuncu 0) - sadece çoklu noktalarda
     for(var j=0;j<c0;j++){
         var cy=startY+dir*(c1+j)*21;
-        add(svg,'circle',{cx:px,cy:cy,r:9,fill:'#f5f0e8',stroke:'#c4a882',strokeWidth:1.5});
+        add('circle',{cx:px,cy:cy,r:9,fill:'#f5f0e8',stroke:'#c4a882',strokeWidth:1.5});
         if(c0>5&&j===Math.floor(c0/2)){
-            add(svg,'text',{x:px,y:cy+3,textAnchor:'middle',fill:'#333',fontSize:8,fontWeight:'bold'},String(c0));
+            add('text',{x:px,y:cy+3,textAnchor:'middle',fill:'#333',fontSize:8,fontWeight:'bold'},String(c0));
         }
     }
 }
@@ -153,13 +153,13 @@ function drawStones(point,px,top){
 function drawBorne(p,cx,cy){
     var cnt=getP(p,25);
     if(cnt===0)return;
-    add(svg,'rect',{x:cx-18,y:cy-45,width:36,height:90,fill:'#2a1a10',rx:4,stroke:'#555',strokeWidth:1});
+    add('rect',{x:cx-18,y:cy-45,width:36,height:90,fill:'#2a1a10',rx:4,stroke:'#555',strokeWidth:1});
     var color=p===0?'#f5f0e8':'#1a1a1a';
     var stroke=p===0?'#c4a882':'#555';
     for(var j=0;j<Math.min(cnt,5);j++){
-        add(svg,'circle',{cx:cx,cy:cy-30+j*15,r:6,fill:color,stroke:stroke,strokeWidth:1});
+        add('circle',{cx:cx,cy:cy-30+j*15,r:6,fill:color,stroke:stroke,strokeWidth:1});
     }
-    if(cnt>5)add(svg,'text',{x:cx,y:cy+38,textAnchor:'middle',fill:'#FFD700',fontSize:9,fontWeight:'bold'},String(cnt));
+    if(cnt>5)add('text',{x:cx,y:cy+38,textAnchor:'middle',fill:'#FFD700',fontSize:9,fontWeight:'bold'},String(cnt));
 }
 
 function nx(i){return i<=12?468-(i-1)*20:32+(i-13)*20+8;}
