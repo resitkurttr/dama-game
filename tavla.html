@@ -5,398 +5,275 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>🎲 Tavla King</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body {
-            background: linear-gradient(135deg, #2c1810, #4a2c1a);
-            min-height: 100vh; display: flex; flex-direction: column;
-            align-items: center; font-family: 'Segoe UI', sans-serif;
-            color: white; padding: 10px; gap: 10px; user-select: none;
-        }
-        h1 { font-size: 22px; text-shadow: 0 0 20px rgba(210,180,120,0.5); }
-        .info-bar {
-            display: flex; justify-content: space-between; width: 100%;
-            max-width: 420px; font-size: 14px; padding: 0 4px;
-        }
-        .player { padding: 6px 14px; border-radius: 8px; background: rgba(255,255,255,0.08); }
-        .player.active { background: rgba(255,215,0,0.2); border: 1px solid gold; }
-        #board { width: 100%; max-width: 420px; position: relative; }
-        svg { width: 100%; height: auto; }
-        .point { cursor: pointer; }
-        .point:hover rect { opacity: 0.8; }
-        .dice-bar {
-            display: flex; gap: 10px; align-items: center; justify-content: center;
-            background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 12px;
-        }
-        .die {
-            width: 40px; height: 40px; background: white; border-radius: 6px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px; font-weight: bold; color: #333;
-        }
-        .die.used { opacity: 0.3; }
-        .btn {
-            padding: 10px 24px; font-size: 14px; border: none; border-radius: 16px;
-            cursor: pointer; font-weight: bold;
-        }
-        .btn-gold { background: linear-gradient(145deg, #FFD700, #FFA500); color: #1a1a2e; }
-        .btn-green { background: linear-gradient(145deg, #4CAF50, #2E7D32); color: white; }
-        .btn-red { background: linear-gradient(145deg, #f44336, #b71c1c); color: white; }
-        .btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-        .status { font-size: 14px; padding: 6px 16px; background: rgba(255,255,255,0.08); border-radius: 14px; }
-        .bar-info { display: flex; gap: 8px; align-items: center; justify-content: center; }
-        .bar-info span { font-size: 14px; }
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+        body{background:linear-gradient(135deg,#2c1810,#4a2c1a);min-height:100vh;display:flex;flex-direction:column;align-items:center;font-family:'Segoe UI',sans-serif;color:white;padding:8px;gap:8px;user-select:none}
+        h1{font-size:20px;text-shadow:0 0 15px rgba(210,180,120,0.5)}
+        .mode-bar{display:flex;gap:4px;background:rgba(255,255,255,0.1);border-radius:18px;padding:3px}
+        .mode-btn{padding:5px 12px;border:none;border-radius:16px;background:transparent;color:rgba(255,255,255,0.5);cursor:pointer;font-size:12px}
+        .mode-btn.active{background:rgba(255,215,0,0.3);color:#FFD700}
+        .info-bar{display:flex;justify-content:space-between;width:100%;max-width:420px;font-size:13px}
+        .player{padding:5px 12px;border-radius:8px;background:rgba(255,255,255,0.08)}
+        .player.active{background:rgba(255,215,0,0.2);border:1px solid gold}
+        #board{width:100%;max-width:420px}
+        svg{width:100%;height:auto}
+        .dice-bar{display:flex;gap:8px;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);padding:6px 14px;border-radius:10px}
+        .die{width:36px;height:36px;background:white;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;color:#333}
+        .die.used{opacity:0.3}
+        .btn{padding:8px 20px;font-size:13px;border:none;border-radius:14px;cursor:pointer;font-weight:bold}
+        .btn-gold{background:linear-gradient(145deg,#FFD700,#FFA500);color:#1a1a2e}
+        .btn-green{background:linear-gradient(145deg,#4CAF50,#2E7D32);color:white}
+        .btn-red{background:linear-gradient(145deg,#f44336,#b71c1c);color:white}
+        .btn-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+        .status{font-size:13px;padding:5px 14px;background:rgba(255,255,255,0.08);border-radius:12px}
+        .overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+        .overlay.show{display:flex}
+        .overlay h2{font-size:24px;text-shadow:0 0 25px gold}
+        .overlay .btn{padding:10px 28px;font-size:15px}
     </style>
 </head>
 <body>
     <h1>🎲 Tavla King</h1>
+    <div class="mode-bar">
+        <button class="mode-btn active" id="mAi">🤖 AI</button>
+        <button class="mode-btn" id="m2p">👥 2 Kişi</button>
+    </div>
     <div class="info-bar">
-        <div class="player active" id="p1">⚫ Oyuncu 1 <div id="p1out" style="font-size:11px;opacity:0.7">Dışarı: 0</div></div>
-        <div class="player" id="p2">⚪ Oyuncu 2 <div id="p2out" style="font-size:11px;opacity:0.7">Dışarı: 0</div></div>
+        <div class="player active" id="p1"><span id="p1n">⚫ Sen</span><div id="p1out" style="font-size:10px;opacity:0.7">Dışarı: 0</div></div>
+        <div class="player" id="p2"><span id="p2n">⚪ AI</span><div id="p2out" style="font-size:10px;opacity:0.7">Dışarı: 0</div></div>
     </div>
-    <div id="board">
-        <svg viewBox="0 0 480 320" id="svgBoard"></svg>
-    </div>
-    <div class="dice-bar">
-        <div class="die" id="d1">-</div>
-        <div class="die" id="d2">-</div>
-    </div>
-    <div class="status" id="status">🎲 Zar at ve başla!</div>
+    <div id="board"><svg viewBox="0 0 480 300" id="svgBoard"></svg></div>
+    <div class="dice-bar"><div class="die" id="d1">-</div><div class="die" id="d2">-</div></div>
+    <div class="status" id="status">🎲 Zar at!</div>
     <div class="btn-row">
         <button class="btn btn-gold" id="btnRoll">🎲 Zar At</button>
-        <button class="btn btn-green" id="btnNew">🔄 Yeni Oyun</button>
+        <button class="btn btn-green" id="btnNew">🔄 Yeni</button>
         <button class="btn btn-red" id="btnPass">⏭️ Pas</button>
     </div>
+    <div class="overlay" id="overlay">
+        <h2 id="winText"></h2>
+        <button class="btn btn-green" id="btnAgain">🔄 Tekrar Oyna</button>
+    </div>
 
-    <script>
-    (function() {
-        // Tavla: Basitleştirilmiş 2 kişilik
-        // 24 nokta (1-24), her oyuncu 15 taş
-        // Basit kural: zar kadar ilerle, engel varsa gidemezsin
+<script>
+(function(){
+var currentPlayer=0,dice=[0,0],diceUsed=[false,false],pieces=[],selectedPoint=-1,rolled=false;
+var gameMode='ai',aiThinking=false;
 
-        var currentPlayer = 0; // 0=siyah, 1=beyaz
-        var dice = [0, 0];
-        var diceUsed = [false, false];
-        var pieces = []; // [oyuncu][nokta] = taş sayısı. Nokta 0=dışarı, 25=bar
-        var selectedPoint = -1;
-        var rolled = false;
+function initGame(){
+    currentPlayer=Math.random()>0.5?0:1;
+    dice=[0,0];diceUsed=[false,false];pieces=[[],[]];
+    for(var i=0;i<26;i++){pieces[0][i]=0;pieces[1][i]=0;}
+    pieces[0][24]=2;pieces[0][13]=5;pieces[0][8]=3;pieces[0][6]=5;
+    pieces[1][1]=2;pieces[1][12]=5;pieces[1][17]=3;pieces[1][19]=5;
+    selectedPoint=-1;rolled=false;aiThinking=false;
+    document.getElementById('d1').textContent='-';
+    document.getElementById('d2').textContent='-';
+    document.getElementById('d1').classList.remove('used');
+    document.getElementById('d2').classList.remove('used');
+    render();
+    var turn=currentPlayer===0?'Sıran - Zar at!':(gameMode==='ai'?'AI düşünüyor...':'Oyuncu 2 sırası');
+    updateStatus(turn);
+    document.getElementById('overlay').classList.remove('show');
+    if(currentPlayer===1&&gameMode==='ai')runAI();
+}
 
-        function initGame() {
-            currentPlayer = Math.random() > 0.5 ? 0 : 1;
-            dice = [0, 0];
-            diceUsed = [false, false];
-            pieces = [[], []];
-            for (var i = 0; i < 26; i++) { pieces[0][i] = 0; pieces[1][i] = 0; }
+function render(){
+    var svg=document.getElementById('svgBoard');svg.innerHTML='';
+    var bg=svgEl('rect',{x:0,y:0,width:480,height:300,fill:'#1a0f08'});
+    svg.appendChild(bg);
+    svg.appendChild(svgEl('rect',{x:8,y:8,width:464,height:284,fill:'none',stroke:'#8B4513',strokeWidth:2}));
+    for(var i=1;i<=24;i++){
+        var x=pointX(i),isTop=i>=13,y=isTop?12:145,h=120;
+        var color=i%2===0?'#c0392b':'#ecf0f1';
+        var pts=isTop?x+','+y+' '+(x-14)+','+(y+h)+' '+(x+14)+','+(y+h):x+','+(292)+' '+(x-14)+','+(292-h)+' '+(x+14)+','+(292-h);
+        svg.appendChild(svgEl('polygon',{points:pts,fill:color,opacity:'0.9'}));
+        var txt=svgEl('text',{x:x,y:isTop?10:298,textAnchor:'middle',fill:'rgba(255,255,255,0.4)',fontSize:'8'});
+        txt.textContent=i;svg.appendChild(txt);
+        drawPieces(svg,i,x,isTop);
+    }
+    svg.appendChild(svgEl('rect',{x:230,y:8,width:20,height:284,fill:'#3d2817'}));
+    if(selectedPoint>0){
+        var sx=pointX(selectedPoint),sy=selectedPoint>=13?10:145;
+        svg.appendChild(svgEl('rect',{x:sx-16,y:sy-2,width:32,height:130,fill:'none',stroke:'#FFD700',strokeWidth:3,rx:4}));
+    }
+    drawOutside(svg,0,390,150);drawOutside(svg,1,390,250);
+    document.getElementById('p1').classList.toggle('active',currentPlayer===0);
+    document.getElementById('p2').classList.toggle('active',currentPlayer===1);
+    document.getElementById('p1out').textContent='Dışarı: '+pieces[0][0];
+    document.getElementById('p2out').textContent='Dışarı: '+pieces[1][0];
+}
 
-            // Başlangıç düzeni (klasik tavla)
-            // Oyuncu 0 (siyah): 24'ten başlar, 1'e doğru gider
-            pieces[0][24] = 2; pieces[0][13] = 5; pieces[0][8] = 3; pieces[0][6] = 5;
-            // Oyuncu 1 (beyaz): 1'den başlar, 24'e doğru gider
-            pieces[1][1] = 2; pieces[1][12] = 5; pieces[1][17] = 3; pieces[1][19] = 5;
-
-            selectedPoint = -1;
-            rolled = false;
-            render();
-            updateStatus("Oyuncu " + (currentPlayer + 1) + "'ın sırası - Zar at!");
+function drawPieces(svg,point,x,isTop){
+    var counts=[pieces[0][point],pieces[1][point]];
+    var colors=['#2c2c2c','#f0e6d0'];
+    var strokes=['#555','#c4a882'];
+    for(var p=0;p<2;p++){
+        var cnt=counts[p];if(cnt<=0)continue;
+        for(var j=0;j<Math.min(cnt,5);j++){
+            var cy=isTop?22+j*22:278-j*22;
+            svg.appendChild(svgEl('circle',{cx:x,cy:cy,r:9,fill:colors[p],stroke:strokes[p],strokeWidth:1.5}));
         }
-
-        function render() {
-            var svg = document.getElementById('svgBoard');
-            svg.innerHTML = '';
-
-            // Masa arka planı
-            var bg = rect(0, 0, 480, 320, '#1a0f08');
-            svg.appendChild(bg);
-
-            // Üst ve alt çizgi
-            svg.appendChild(rect(10, 10, 460, 300, 'none', '#8B4513', 2));
-
-            // Noktaları çiz
-            for (var i = 1; i <= 24; i++) {
-                var x = pointX(i);
-                var isTop = i >= 13;
-                var y = isTop ? 15 : 155;
-                var h = 130;
-                var color = (i % 2 === 0) ? '#c0392b' : '#ecf0f1';
-
-                var p = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-                var pts;
-                if (isTop) {
-                    pts = x + ',15 ' + (x - 15) + ',' + (15 + h) + ' ' + (x + 15) + ',' + (15 + h);
-                } else {
-                    pts = x + ',305 ' + (x - 15) + ',' + (305 - h) + ' ' + (x + 15) + ',' + (305 - h);
-                }
-                p.setAttribute('points', pts);
-                p.setAttribute('fill', color);
-                p.setAttribute('opacity', '0.9');
-                svg.appendChild(p);
-
-                // Nokta numarası
-                var txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                txt.setAttribute('x', x);
-                txt.setAttribute('y', isTop ? 13 : 318);
-                txt.setAttribute('text-anchor', 'middle');
-                txt.setAttribute('fill', 'rgba(255,255,255,0.5)');
-                txt.setAttribute('font-size', '9');
-                txt.textContent = i;
-                svg.appendChild(txt);
-
-                // Taşları çiz
-                drawPieces(svg, i, x, isTop);
-            }
-
-            // Orta bar
-            svg.appendChild(rect(230, 10, 20, 300, '#3d2817'));
-
-            // Seçili nokta vurgusu
-            if (selectedPoint > 0) {
-                var sx = pointX(selectedPoint);
-                var sy = selectedPoint >= 13 ? 15 : 155;
-                var highlight = rect(sx - 17, sy - 2, 34, 134, 'none', '#FFD700', 3);
-                highlight.setAttribute('rx', '4');
-                svg.appendChild(highlight);
-            }
-
-            // Dışarı taşları
-            drawOutside(svg, 0, 380, 20);
-            drawOutside(svg, 1, 380, 290);
-
-            // Güncelle
-            var p1a = currentPlayer === 0;
-            document.getElementById('p1').classList.toggle('active', p1a);
-            document.getElementById('p2').classList.toggle('active', !p1a);
-            document.getElementById('p1out').textContent = 'Dışarı: ' + pieces[0][0];
-            document.getElementById('p2out').textContent = 'Dışarı: ' + pieces[1][0];
+        if(cnt>5){
+            var t=svgEl('text',{x:x,y:isTop?28:272,textAnchor:'middle',fill:'gold',fontSize:'10',fontWeight:'bold'});
+            t.textContent=cnt;svg.appendChild(t);
         }
+    }
+}
 
-        function drawPieces(svg, point, x, isTop) {
-            var count = pieces[currentPlayer][point];
-            if (count <= 0) {
-                // Diğer oyuncunun taşlarını da göster
-                var other = currentPlayer === 0 ? 1 : 0;
-                count = pieces[other][point];
-                if (count <= 0) return;
-                var color = other === 0 ? '#2c2c2c' : '#f0e6d0';
-                for (var j = 0; j < Math.min(count, 5); j++) {
-                    var cy = isTop ? 25 + j * 22 : 295 - j * 22;
-                    var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                    circle.setAttribute('cx', x); circle.setAttribute('cy', cy);
-                    circle.setAttribute('r', '9');
-                    circle.setAttribute('fill', color);
-                    circle.setAttribute('stroke', other === 0 ? '#555' : '#c4a882');
-                    circle.setAttribute('stroke-width', '1.5');
-                    svg.appendChild(circle);
-                }
-                return;
-            }
-            var color = currentPlayer === 0 ? '#2c2c2c' : '#f0e6d0';
-            for (var j = 0; j < Math.min(count, 5); j++) {
-                var cy = isTop ? 25 + j * 22 : 295 - j * 22;
-                var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                circle.setAttribute('cx', x); circle.setAttribute('cy', cy);
-                circle.setAttribute('r', '9');
-                circle.setAttribute('fill', color);
-                circle.setAttribute('stroke', currentPlayer === 0 ? '#555' : '#c4a882');
-                circle.setAttribute('stroke-width', '1.5');
-                svg.appendChild(circle);
-            }
-            if (count > 5) {
-                var txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                txt.setAttribute('x', x);
-                txt.setAttribute('y', isTop ? 30 : 290);
-                txt.setAttribute('text-anchor', 'middle');
-                txt.setAttribute('fill', 'gold');
-                txt.setAttribute('font-size', '10');
-                txt.setAttribute('font-weight', 'bold');
-                txt.textContent = count;
-                svg.appendChild(txt);
+function drawOutside(svg,player,x,y){
+    var cnt=pieces[player][0],color=player===0?'#2c2c2c':'#f0e6d0';
+    for(var j=0;j<Math.min(cnt,5);j++){
+        svg.appendChild(svgEl('circle',{cx:x,cy:y+j*14-30,r:6,fill:color}));
+    }
+    if(cnt>5){var t=svgEl('text',{x:x,y:y+14,textAnchor:'middle',fill:'gold',fontSize:'10'});t.textContent=cnt;svg.appendChild(t);}
+}
+
+function svgEl(tag,attrs){var el=document.createElementNS('http://www.w3.org/2000/svg',tag);for(var k in attrs)el.setAttribute(k,attrs[k]);return el;}
+function pointX(i){return i<=12?460-(i-1)*18-9:20+(i-13)*18+9;}
+
+function getDiceVals(){var v=[];if(!diceUsed[0])v.push(dice[0]);if(!diceUsed[1])v.push(dice[1]);return v;}
+
+function canMoveFrom(point){
+    if(pieces[currentPlayer][point]<=0)return false;
+    var dv=getDiceVals();
+    for(var d=0;d<dv.length;d++){
+        var target=currentPlayer===0?point-dv[d]:point+dv[d];
+        if(target===0||target===25)return true;
+        if(target>0&&target<25&&pieces[currentPlayer][target]<=1)return true;
+    }
+    return false;
+}
+
+function rollDice(){
+    if(rolled||aiThinking)return;
+    dice[0]=Math.floor(Math.random()*6)+1;
+    dice[1]=Math.floor(Math.random()*6)+1;
+    diceUsed=[false,false];
+    document.getElementById('d1').textContent=dice[0];
+    document.getElementById('d2').textContent=dice[1];
+    document.getElementById('d1').classList.remove('used');
+    document.getElementById('d2').classList.remove('used');
+    rolled=true;selectedPoint=-1;render();
+    updateStatus(currentPlayer===0?'Taş seç!':'AI düşünüyor...');
+    if(currentPlayer===1&&gameMode==='ai')runAI();
+}
+
+function onPointClick(point){
+    if(!rolled||aiThinking)return;
+    if(selectedPoint>0){
+        var dv=getDiceVals();
+        for(var d=0;d<dv.length;d++){
+            var target=currentPlayer===0?selectedPoint-dv[d]:selectedPoint+dv[d];
+            if(target===point&&(target===0||target===25||pieces[currentPlayer][target]<=1)){
+                movePiece(selectedPoint,target);return;
             }
         }
+        selectedPoint=-1;render();return;
+    }
+    if(pieces[currentPlayer][point]>0&&canMoveFrom(point)){selectedPoint=point;render();}
+}
 
-        function drawOutside(svg, player, x, y) {
-            var count = pieces[player][0];
-            var color = player === 0 ? '#2c2c2c' : '#f0e6d0';
-            for (var j = 0; j < Math.min(count, 5); j++) {
-                var cy = y + j * 14 - 30;
-                var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                circle.setAttribute('cx', x); circle.setAttribute('cy', cy);
-                circle.setAttribute('r', '6');
-                circle.setAttribute('fill', color);
-                svg.appendChild(circle);
-            }
-            if (count > 5) {
-                var txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                txt.setAttribute('x', x); txt.setAttribute('y', y + 14);
-                txt.setAttribute('text-anchor', 'middle');
-                txt.setAttribute('fill', 'gold'); txt.setAttribute('font-size', '10');
-                txt.textContent = count;
-                svg.appendChild(txt);
-            }
+function movePiece(from,to){
+    pieces[currentPlayer][from]--;
+    if(to===0||to===25)pieces[currentPlayer][0]++;
+    else pieces[currentPlayer][to]++;
+    var diff=currentPlayer===0?(from-to):(to-from);
+    for(var i=0;i<2;i++){if(!diceUsed[i]&&dice[i]===diff){diceUsed[i]=true;break;}}
+    document.getElementById('d1').classList.toggle('used',diceUsed[0]);
+    document.getElementById('d2').classList.toggle('used',diceUsed[1]);
+    selectedPoint=-1;render();
+    if(pieces[currentPlayer][0]>=15){
+        updateStatus('🏆 '+(currentPlayer===0?'Sen':'AI')+' Kazandı!');return;
+    }
+    if(diceUsed[0]&&diceUsed[1])switchTurn();
+    else updateStatus('Taş taşı!');
+}
+
+function switchTurn(){
+    currentPlayer=currentPlayer===0?1:0;
+    dice=[0,0];diceUsed=[false,false];rolled=false;selectedPoint=-1;
+    document.getElementById('d1').textContent='-';
+    document.getElementById('d2').textContent='-';
+    document.getElementById('d1').classList.remove('used');
+    document.getElementById('d2').classList.remove('used');
+    render();
+    if(currentPlayer===0)updateStatus('Sıran - Zar at!');
+    else if(gameMode==='ai'){updateStatus('AI düşünüyor...');runAI();}
+    else updateStatus('Oyuncu 2 sırası - Zar at!');
+}
+
+function passTurn(){if(!rolled)return;switchTurn();}
+
+// ─── AI ───
+function runAI(){
+    aiThinking=true;
+    setTimeout(function(){
+        if(!rolled){
+            dice[0]=Math.floor(Math.random()*6)+1;
+            dice[1]=Math.floor(Math.random()*6)+1;
+            diceUsed=[false,false];
+            document.getElementById('d1').textContent=dice[0];
+            document.getElementById('d2').textContent=dice[1];
+            rolled=true;render();
         }
+        aiMoveStep();
+    },600);
+}
 
-        function pointX(i) {
-            // 1-12 sağdan sola (alt), 13-24 soldan sağa (üst)
-            if (i <= 12) return 460 - (i - 1) * 18 - 9;
-            return 20 + (i - 13) * 18 + 9;
+function aiMoveStep(){
+    var bestMove=null,bestScore=-999;
+    for(var pt=1;pt<=24;pt++){
+        if(pieces[1][pt]<=0)continue;
+        var dv=getDiceVals();
+        for(var d=0;d<dv.length;d++){
+            var target=1+dv[d]; // beyaz ileri gider
+            if(pt+dv[d]>25)continue;
+            target=pt+dv[d];
+            if(target===25||target<=0)continue;
+            if(target<25&&pieces[1][target]>1)continue;
+            var sc=0;
+            if(pieces[1][target]===0)sc+=2; // boş yere gitme
+            if(target===25){sc+=10;toplama bonusu}
+            if(target===19||target===20||target===21)sc+=1; // eve yaklaş
+            if(target>=19)sc+=3; // ev alanında
+            if(sc>bestScore){bestScore=sc;bestMove={from:pt,to:target,diceIdx:d};}
         }
+    }
+    if(bestMove){
+        movePiece(bestMove.from,bestMove.to);
+        setTimeout(function(){
+            if(!diceUsed[0]||!diceUsed[1])aiMoveStep();
+            else aiThinking=false;
+        },500);
+    }else{
+        diceUsed=[true,true];
+        document.getElementById('d1').classList.add('used');
+        document.getElementById('d2').classList.add('used');
+        aiThinking=false;
+        switchTurn();
+    }
+}
 
-        function rect(x, y, w, h, fill, stroke, sw) {
-            var r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-            r.setAttribute('x', x); r.setAttribute('y', y);
-            r.setAttribute('width', w); r.setAttribute('height', h);
-            if (fill) r.setAttribute('fill', fill);
-            if (stroke) { r.setAttribute('stroke', stroke); r.setAttribute('stroke-width', sw || 1); }
-            return r;
-        }
+function updateStatus(msg){document.getElementById('status').textContent=msg;}
 
-        function rollDice() {
-            if (rolled) return;
-            dice[0] = Math.floor(Math.random() * 6) + 1;
-            dice[1] = Math.floor(Math.random() * 6) + 1;
-            diceUsed = [false, false];
-            document.getElementById('d1').textContent = dice[0];
-            document.getElementById('d2').textContent = dice[1];
-            document.getElementById('d1').classList.remove('used');
-            document.getElementById('d2').classList.remove('used');
-            rolled = true;
-            selectedPoint = -1;
-            render();
-            updateStatus("Taş seç (Oyuncu " + (currentPlayer + 1) + ")");
-        }
+// ─── Events ───
+document.getElementById('btnRoll').addEventListener('click',rollDice);
+document.getElementById('btnNew').addEventListener('click',initGame);
+document.getElementById('btnAgain').addEventListener('click',initGame);
+document.getElementById('btnPass').addEventListener('click',passTurn);
+document.getElementById('mAi').addEventListener('click',function(){gameMode='ai';document.getElementById('mAi').classList.add('active');document.getElementById('m2p').classList.remove('active');initGame();});
+document.getElementById('m2p').addEventListener('click',function(){gameMode='2p';document.getElementById('m2p').classList.add('active');document.getElementById('mAi').classList.remove('active');initGame();});
 
-        function getAvailableDice() {
-            var vals = [];
-            if (!diceUsed[0]) vals.push(dice[0]);
-            if (!diceUsed[1]) vals.push(dice[1]);
-            // Çift ise 4 hamle
-            if (dice[0] === dice[1]) {
-                var c = 0;
-                for (var i = 0; i < 4; i++) if (!diceUsed[i % 4 === 0 ? 0 : (i % 4 === 1 ? 1 : (i % 4 === 2 ? 0 : 1))]) c++;
-            }
-            return vals;
-        }
+document.getElementById('svgBoard').addEventListener('click',function(e){
+    if(aiThinking)return;
+    var rect=e.target.closest('svg').getBoundingClientRect();
+    var scaleX=480/rect.width;
+    var mouseX=(e.clientX-rect.left)*scaleX;
+    for(var i=1;i<=24;i++){if(Math.abs(mouseX-pointX(i))<18){onPointClick(i);return;}}
+});
 
-        function canMoveFrom(point) {
-            if (pieces[currentPlayer][point] <= 0) return false;
-            var diceVals = getAvailableDice();
-            for (var d = 0; d < diceVals.length; d++) {
-                var target = currentPlayer === 0 ? point - diceVals[d] : point + diceVals[d];
-                if (target >= 0 && target <= 25) {
-                    if (target === 0 || target === 25) return true; // Toplama
-                    if (pieces[currentPlayer][target] <= 1) return true; // Boş veya 1 taş
-                    // 2'den fazla taş varsa ve rakip taş varsa bar'a gider
-                }
-            }
-            return false;
-        }
-
-        function onPointClick(point) {
-            if (!rolled) { updateStatus("Önce zar at!"); return; }
-
-            // Seçili taş varsa, taşı
-            if (selectedPoint > 0) {
-                var diceVals = getAvailableDice();
-                for (var d = 0; d < diceVals.length; d++) {
-                    var target = currentPlayer === 0 ? selectedPoint - diceVals[d] : selectedPoint + diceVals[d];
-                    if (target === point) {
-                        // Hedef geçerli mi?
-                        if (target >= 0 && target <= 25) {
-                            if (target === 0 || target === 25 || pieces[currentPlayer][target] <= 1) {
-                                movePiece(selectedPoint, target);
-                                return;
-                            }
-                        }
-                    }
-                }
-                selectedPoint = -1;
-                render();
-                return;
-            }
-
-            // Taş seçimi
-            if (pieces[currentPlayer][point] > 0 && canMoveFrom(point)) {
-                selectedPoint = point;
-                render();
-                updateStatus("Nereye taşıyacaksın? (Oyuncu " + (currentPlayer + 1) + ")");
-            }
-        }
-
-        function movePiece(from, to) {
-            pieces[currentPlayer][from]--;
-            if (to === 0 || to === 25) {
-                pieces[currentPlayer][0]++; // Toplanan taşlar
-            } else {
-                pieces[currentPlayer][to]++;
-            }
-
-            // Kullanılan zarı işaretle
-            var diff = currentPlayer === 0 ? (from - to) : (to - from);
-            for (var i = 0; i < 2; i++) {
-                if (!diceUsed[i] && dice[i] === diff) { diceUsed[i] = true; break; }
-            }
-            document.getElementById('d' + (diceUsed[0] ? '1' : '')).classList.add('used');
-
-            selectedPoint = -1;
-            render();
-
-            // Oyun bitti mi?
-            if (pieces[currentPlayer][0] >= 15) {
-                updateStatus("🏆 Oyuncu " + (currentPlayer + 1) + " Kazandı!");
-                return;
-            }
-
-            // Tüm zarlar kullanıldıysa
-            if (diceUsed[0] && diceUsed[1]) {
-                switchTurn();
-            } else {
-                updateStatus("Taş taşı (Oyuncu " + (currentPlayer + 1) + ")");
-            }
-        }
-
-        function switchTurn() {
-            currentPlayer = currentPlayer === 0 ? 1 : 0;
-            dice = [0, 0];
-            diceUsed = [false, false];
-            rolled = false;
-            document.getElementById('d1').textContent = '-';
-            document.getElementById('d2').textContent = '-';
-            document.getElementById('d1').classList.remove('used');
-            document.getElementById('d2').classList.remove('used');
-            selectedPoint = -1;
-            render();
-            updateStatus("Oyuncu " + (currentPlayer + 1) + "'ın sırası - Zar at!");
-        }
-
-        function passTurn() {
-            if (!rolled) return;
-            switchTurn();
-        }
-
-        function updateStatus(msg) {
-            document.getElementById('status').textContent = msg;
-        }
-
-        // ─── Event Binding ───
-        document.getElementById('btnRoll').addEventListener('click', rollDice);
-        document.getElementById('btnNew').addEventListener('click', function() { initGame(); });
-        document.getElementById('btnPass').addEventListener('click', passTurn);
-
-        // SVG tıklama
-        document.getElementById('svgBoard').addEventListener('click', function(e) {
-            var rect = e.target.closest('svg').getBoundingClientRect();
-            var scaleX = 480 / rect.width;
-            var mouseX = (e.clientX - rect.left) * scaleX;
-
-            // Hangi noktaya tıklandı?
-            for (var i = 1; i <= 24; i++) {
-                var px = pointX(i);
-                if (Math.abs(mouseX - px) < 18) {
-                    onPointClick(i);
-                    return;
-                }
-            }
-        });
-
-        initGame();
-    })();
-    </script>
+initGame();
+})();
+</script>
 </body>
 </html>
