@@ -4,457 +4,426 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>🏓 Ping Pong King</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-family: 'Segoe UI', sans-serif;
-            color: white;
-            overflow: hidden;
-            touch-action: none;
-        }
-        .top-bar {
-            display: flex; align-items: center; justify-content: space-between;
-            width: 100%; max-width: 500px; padding: 8px 12px; gap: 8px;
-        }
-        h1 { font-size: 22px; text-shadow: 0 0 20px rgba(0,200,255,0.5); }
-        .score-board { display: flex; gap: 30px; font-size: 20px; font-weight: bold; }
-        .score-board .p1 { color: #00d4ff; }
-        .score-board .p2 { color: #ff4081; }
-        .mode-toggle {
-            display: flex; gap: 4px; background: rgba(255,255,255,0.1);
-            border-radius: 20px; padding: 3px; margin-bottom: 6px;
-        }
-        .mode-btn {
-            padding: 6px 14px; border: none; border-radius: 18px;
-            background: transparent; color: rgba(255,255,255,0.5);
-            cursor: pointer; font-size: 13px; transition: all 0.2s;
-        }
-        .mode-btn.active { background: rgba(0,212,255,0.3); color: #00d4ff; }
-        .view-toggle {
-            display: flex; gap: 4px; background: rgba(255,255,255,0.1);
-            border-radius: 20px; padding: 3px; margin-bottom: 6px;
-        }
-        .view-btn {
-            padding: 6px 14px; border: none; border-radius: 18px;
-            background: transparent; color: rgba(255,255,255,0.5);
-            cursor: pointer; font-size: 13px; transition: all 0.2s;
-        }
-        .view-btn.active { background: rgba(255,215,0,0.3); color: #ffd700; }
-        #canvas2d {
-            border: 3px solid rgba(255,255,255,0.3);
-            border-radius: 12px;
-            background: #1a1a2e;
-            box-shadow: 0 0 40px rgba(0,200,255,0.2);
-            touch-action: none;
-            max-width: calc(100vw - 16px);
-        }
-        #canvas3d {
-            border-radius: 12px;
-            touch-action: none;
-            display: none;
-            max-width: calc(100vw - 16px);
-        }
-        .controls {
-            margin-top: 10px;
-            display: flex; gap: 15px;
-        }
-        .ctrl-btn {
-            width: 65px; height: 65px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            background: rgba(255,255,255,0.1);
-            color: white; font-size: 26px;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            user-select: none;
-            transition: background 0.1s;
-        }
-        .ctrl-btn:active { background: rgba(255,255,255,0.3); }
-        .btn {
-            margin-top: 10px; padding: 10px 30px;
-            font-size: 15px; border: none; border-radius: 20px;
-            background: linear-gradient(145deg, #00d4ff, #0088cc);
-            color: #1a1a2e; cursor: pointer; font-weight: bold;
-        }
-        .overlay {
-            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85); z-index: 100;
-            align-items: center; justify-content: center; flex-direction: column;
-        }
-        .overlay.show { display: flex; }
-        .overlay h2 { font-size: 30px; margin-bottom: 12px; text-shadow: 0 0 30px gold; }
-        .overlay p { font-size: 18px; margin-bottom: 18px; }
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+        body{background:#0a0a1a;min-height:100vh;display:flex;flex-direction:column;align-items:center;font-family:'Segoe UI',sans-serif;color:white;user-select:none;overflow:hidden}
+        #topBar{width:100%;padding:6px 10px;display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,0.5);z-index:10}
+        #topBar h1{font-size:16px}
+        .mode-bar{display:flex;gap:3px;background:rgba(255,255,255,0.1);border-radius:16px;padding:2px}
+        .mode-btn{padding:4px 10px;border:none;border-radius:14px;background:transparent;color:rgba(255,255,255,0.5);cursor:pointer;font-size:11px}
+        .mode-btn.active{background:rgba(255,215,0,0.3);color:#FFD700}
+        .view-bar{display:flex;gap:3px;background:rgba(255,255,255,0.1);border-radius:16px;padding:2px}
+        .view-btn{padding:4px 10px;border:none;border-radius:14px;background:transparent;color:rgba(255,255,255,0.5);cursor:pointer;font-size:11px}
+        .view-btn.active{background:rgba(0,180,255,0.3);color:#00B4FF}
+        #scoreBar{display:flex;justify-content:center;gap:12px;padding:4px;font-size:14px}
+        .score{padding:4px 12px;border-radius:8px;background:rgba(255,255,255,0.08)}
+        .score.active{background:rgba(255,215,0,0.2);border:1px solid gold}
+        #gameContainer{flex:1;width:100%;position:relative;touch-action:none}
+        #gameContainer canvas{width:100%!important;height:100%!important}
+        #controls{width:100%;padding:8px;display:flex;flex-direction:column;gap:6px}
+        .ctrl-row{display:flex;justify-content:center;gap:8px}
+        .ctrl-btn{width:64px;height:50px;border-radius:14px;border:none;font-size:22px;cursor:pointer;touch-action:manipulation}
+        .ctrl-btn:active{transform:scale(0.92)}
+        .ctrl-left{background:linear-gradient(145deg,#e91e63,#c2185b);color:white}
+        .ctrl-right{background:linear-gradient(145deg,#2196f3,#1565c0);color:white}
+        .ctrl-serv{background:linear-gradient(145deg,#4CAF50,#2E7D32);color:white}
+        .btn-sm{padding:6px 16px;border:none;border-radius:12px;cursor:pointer;font-size:12px;font-weight:bold;background:rgba(255,255,255,0.15);color:white}
+        #status{font-size:12px;text-align:center;padding:3px;opacity:0.7}
+        .overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+        .overlay.show{display:flex}
+        .overlay h2{font-size:22px;text-shadow:0 0 25px gold}
+        .overlay .btn-sm{padding:10px 24px;font-size:15px}
     </style>
 </head>
 <body>
-    <div class="top-bar">
+    <div id="topBar">
         <h1>🏓 Ping Pong</h1>
-        <div class="score-board">
-            <span class="p1" id="s1">0</span>
-            <span style="opacity:0.4">-</span>
-            <span class="p2" id="s2">0</span>
+        <div class="view-bar">
+            <button class="view-btn" id="v2d">2D</button>
+            <button class="view-btn active" id="v3d">3D</button>
+        </div>
+        <div class="mode-bar">
+            <button class="mode-btn active" id="mAi">🤖 AI</button>
+            <button class="mode-btn" id="m2p">👥 2K</button>
         </div>
     </div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-        <div class="mode-toggle">
-            <button class="mode-btn active" onclick="setMode('ai',this)">🤖 AI</button>
-            <button class="mode-btn" onclick="setMode('2p',this)">👥 2 Kişilik</button>
+    <div id="scoreBar">
+        <div class="score active" id="s1">Sen 0</div>
+        <div class="score" id="s2">AI 0</div>
+    </div>
+    <div id="gameContainer"></div>
+    <div id="controls">
+        <div class="ctrl-row">
+            <button class="ctrl-btn ctrl-left" id="btnL">◀</button>
+            <button class="ctrl-btn ctrl-serv" id="btnS">▶ Servis</button>
+            <button class="ctrl-btn ctrl-right" id="btnR">▶</button>
         </div>
-        <div class="view-toggle">
-            <button class="view-btn active" onclick="setView('2d',this)">🎯 2D</button>
-            <button class="view-btn" onclick="setView('3d',this)">🎮 3B</button>
+        <div class="ctrl-row">
+            <button class="btn-sm" id="btnNew">🔄 Yeni</button>
         </div>
     </div>
-
-    <canvas id="canvas2d"></canvas>
-    <div id="canvas3d"></div>
-
-    <div class="controls" id="controls">
-        <button class="ctrl-btn" id="btnUp">▲</button>
-        <button class="ctrl-btn" id="btnDown">▼</button>
-    </div>
-
+    <div id="status">Servis ver!</div>
     <div class="overlay" id="overlay">
         <h2 id="winText"></h2>
-        <p id="winSub"></p>
-        <button class="btn" onclick="startGame(); document.getElementById('overlay').classList.remove('show');">🔄 Tekrar Oyna</button>
+        <button class="btn-sm" id="btnAgain">🔄 Tekrar Oyna</button>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script>
-    // ═══════════════════════════════════════
-    //  PING PONG - 2D & 3D Hibrit
-    // ═══════════════════════════════════════
-    const WIN_SCORE = 5;
-    let gameMode = 'ai';
-    let viewMode = '2d';
-    let gameRunning = false;
-    let score = [0, 0];
-    let animFrame;
+<script>
+(function(){
+var viewMode='3d',gameMode='ai';
+var score=[0,0],WIN=5,serving=true,servingPlayer=0;
+var aiThinking=false;
 
-    // 2D Nesneleri
-    const canvas = document.getElementById('canvas2d');
-    const ctx = canvas.getContext('2d');
+// ─── 2D State ───
+var canvas,ctx;
+var paddles=[{x:50},{x:50}],ball={x:200,y:300,vx:0,vy:0},paddleW=80,paddleH=12,ballR=8;
+var keys={},touchLeft=false,touchRight=false;
+var W=400,H=500;
 
-    // 3D nesneleri
-    let scene, camera, renderer, table3d, ball3d, paddle1_3d, paddle23d;
+// ─── 3D State ───
+var scene,camera,renderer;
+var paddleMeshes=[],ballMesh3d,tableMesh,tableW=3,tableH=5;
+var aiTarget=0;
 
-    function resize2d() {
-        const w = Math.min(window.innerWidth - 16, 420);
-        const h = w * 0.65;
-        canvas.width = w;
-        canvas.height = h;
-    }
-    resize2d();
-    window.addEventListener('resize', function() {
-        resize2d();
-        if (viewMode === '3d') resize3d();
+function init3D(){
+    var container=document.getElementById('gameContainer');
+    var w=container.clientWidth,h=container.clientHeight;
+    scene=new THREE.Scene();
+    scene.background=new THREE.Color(0x0a0a1a);
+    scene.fog=new THREE.Fog(0x0a0a1a,8,20);
+    camera=new THREE.PerspectiveCamera(50,w/h,0.1,100);
+    camera.position.set(0,5,5);
+    camera.lookAt(0,0,0);
+    renderer=new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(w,h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    container.innerHTML='';container.appendChild(renderer.domElement);
+
+    // Işıklar
+    scene.add(new THREE.AmbientLight(0x404060,0.6));
+    var dir=new THREE.DirectionalLight(0xffffff,0.8);
+    dir.position.set(3,8,5);scene.add(dir);
+    var spot=new THREE.PointLight(0xffaa00,0.4,10);
+    spot.position.set(0,5,0);scene.add(spot);
+
+    // Masa
+    var tableGeo=new THREE.BoxGeometry(tableW,0.1,tableH);
+    var tableMat=new THREE.MeshPhongMaterial({color:0x1565C0});
+    tableMesh=new THREE.Mesh(tableGeo,tableMat);
+    tableMesh.position.y=-0.5;scene.add(tableMesh);
+
+    // Masa çizgileri
+    var lineGeo=new THREE.PlaneGeometry(tableW-0.05,0.02);
+    var lineMat=new THREE.MeshBasicMaterial({color:0xffffff,opacity:0.5,transparent:true});
+    var centerLine=new THREE.Mesh(lineGeo,lineMat);
+    centerLine.rotation.x=-Math.PI/2;centerLine.position.y=-0.44;scene.add(centerLine);
+
+    // Masa kenarları
+    var borderGeo=new THREE.BoxGeometry(tableW+0.1,0.15,0.05);
+    var borderMat=new THREE.MeshPhongMaterial({color:0x0D47A1});
+    [-1,1].forEach(function(s){
+        var b=new THREE.Mesh(borderGeo,borderMat);
+        b.position.set(0,-0.42,s*tableH/2);scene.add(b);
     });
 
-    let ball, paddle1, paddle2;
-    let keys = {};
-    let touchDir = 0;
+    // Raketi (karakter olarak - gözleri var!)
+    paddleMeshes=[];
+    for(var i=0;i<2;i++){
+        var group=new THREE.Group();
 
-    function setMode(m, el) {
-        gameMode = m;
-        document.querySelectorAll('.mode-btn').forEach(function(b) { b.classList.remove('active'); });
-        el.classList.add('active');
-        startGame();
+        // Raket gövdesi
+        var padGeo=new THREE.BoxGeometry(0.7,0.08,0.15);
+        var padMat=new THREE.MeshPhongMaterial({color:i===0?0xFF5722:0x2196F3});
+        var pad=new THREE.Mesh(padGeo,padMat);
+        group.add(pad);
+
+        // Sol göz
+        var eyeGeo=new THREE.SphereGeometry(0.04,8,8);
+        var eyeMat=new THREE.MeshPhongMaterial({color:0xffffff});
+        var pupilMat=new THREE.MeshPhongMaterial({color:0x111111});
+        var lEye=new THREE.Mesh(eyeGeo,eyeMat);
+        lEye.position.set(-0.15,0.08,0);group.add(lEye);
+        var lPupil=new THREE.Mesh(new THREE.SphereGeometry(0.02,8,8),pupilMat);
+        lPupil.position.set(-0.15,0.08,0.04);group.add(lPupil);
+
+        // Sağ göz
+        var rEye=new THREE.Mesh(eyeGeo,eyeMat);
+        rEye.position.set(0.15,0.08,0);group.add(rEye);
+        var rPupil=new THREE.Mesh(new THREE.SphereGeometry(0.02,8,8),pupilMat);
+        rPupil.position.set(0.15,0.08,0.04);group.add(rPupil);
+
+        // Gülümseme
+        var smileShape=new THREE.Shape();
+        smileShape.moveTo(-0.12,0);smileShape.quadraticCurveTo(0,-0.06,0.12,0);
+        var smileGeo=new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
+            new THREE.Vector3(-0.12,0,0),
+            new THREE.Vector3(0,-0.04,0),
+            new THREE.Vector3(0.12,0,0)
+        ]),8,0.008,4,false);
+        var smile=new THREE.Mesh(smileGeo,new THREE.MeshPhongMaterial({color:0x333333}));
+        smile.position.set(0,0.05,0.06);group.add(smile);
+
+        group.position.y=-0.44;
+        group.position.z=i===0?-tableH/2+0.3:tableH/2-0.3;
+        scene.add(group);
+        paddleMeshes.push(group);
     }
 
-    function setView(v, el) {
-        viewMode = v;
-        document.querySelectorAll('.view-btn').forEach(function(b) { b.classList.remove('active'); });
-        el.classList.add('active');
-        if (v === '2d') {
-            canvas.style.display = 'block';
-            document.getElementById('canvas3d').style.display = 'none';
-        } else {
-            canvas.style.display = 'none';
-            document.getElementById('canvas3d').style.display = 'block';
-            if (!scene) init3d();
-        }
-        startGame();
+    // Top
+    var ballGeo=new THREE.SphereGeometry(0.06,12,12);
+    var ballMat=new THREE.MeshPhongMaterial({color:0xFFFF00,emissive:0x554400});
+    ballMesh3d=new THREE.Mesh(ballGeo,ballMat);
+    ballMesh3d.position.y=-0.38;
+    scene.add(ballMesh3d);
+
+    // Top gölgesi
+    var shadowGeo=new THREE.CircleGeometry(0.08,16);
+    var shadowMat=new THREE.MeshBasicMaterial({color:0x000000,opacity:0.3,transparent:true});
+    var shadow=new THREE.Mesh(shadowGeo,shadowMat);
+    shadow.rotation.x=-Math.PI/2;shadow.position.y=-0.43;ballMesh3d.add(shadow);
+
+    // 2D state'i 3D'ye çevir
+    ball.x=0;ball.y=-tableH/2+0.3;ball.vx=0;ball.vy=0;
+    paddles[0].x=0;paddles[1].x=0;
+
+    render3D();
+}
+
+function init2D(){
+    var container=document.getElementById('gameContainer');
+    container.innerHTML='';
+    canvas=document.createElement('canvas');
+    ctx=canvas.getContext('2d');
+    container.appendChild(canvas);
+    W=container.clientWidth;H=container.clientHeight;
+    canvas.width=W;canvas.height=H;
+    paddleW=W*0.2;
+    ball.x=0;ball.y=0;ball.vx=0;ball.vy=0;
+    paddles[0].x=0;paddles[1].x=0;
+    ballR=Math.min(12,W*0.03);
+    render2D();
+}
+
+// ─── 2D Rendering ───
+function render2D(){
+    if(!ctx)return;
+    ctx.fillStyle='#0a1628';ctx.fillRect(0,0,W,H);
+    // Masa
+    var mTop=40,mBot=H-40,mLeft=30,mRight=W-30;
+    ctx.fillStyle='#1565C0';
+    ctx.beginPath();ctx.roundRect(mLeft,mTop,mRight-mLeft,mBot-mTop,8);ctx.fill();
+    // Orta çizgi
+    ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=2;ctx.setLineDash([6,4]);
+    ctx.beginPath();ctx.moveTo(mLeft,(mTop+mBot)/2);ctx.lineTo(mRight,(mTop+mBot)/2);ctx.stroke();
+    ctx.setLineDash([]);
+    // Paddle'lar
+    var p1x=W/2+paddles[0].x-paddleW/2;
+    ctx.fillStyle='#FF5722';ctx.beginPath();ctx.roundRect(p1x,mBot-20,paddleW,10,5);ctx.fill();
+    var p2x=W/2+paddles[1].x-paddleW/2;
+    ctx.fillStyle='#2196F3';ctx.beginPath();ctx.roundRect(p2x,mTop+10,paddleW,10,5);ctx.fill();
+    // Top
+    ctx.fillStyle='#FFD700';ctx.beginPath();
+    ctx.arc(W/2+ball.x,H/2+ball.y,ballR,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#FFF8';ctx.beginPath();
+    ctx.arc(W/2+ball.x-2,H/2+ball.y-2,ballR*0.3,0,Math.PI*2);ctx.fill();
+}
+
+function update2D(){
+    if(serving)return;
+    ball.x+=ball.vx;ball.y+=ball.vy;
+    var mTop=-(H/2-50),mBot=H/2-50;
+    if(Math.abs(ball.x)>W/2-30-ballR){ball.vx*=-1;ball.x=Math.sign(ball.x)*(W/2-31-ballR);}
+    // Paddle çarpışma
+    var pBot=H/2-20,pTop=-(H/2-30);
+    if(ball.y+ballR>=pTop&&ball.y-ballR<=pTop+10&&ball.vy<0){
+        var px=W/2+paddles[0].x;
+        if(Math.abs(ball.x)<paddleW/2+ballR){ball.vy*=-1.05;ball.y=pTop+ballR+1;ball.vx+=(ball.x-px)*0.01;}
     }
-
-    function initObjects() {
-        var W = canvas.width, H = canvas.height;
-        ball = { x: W/2, y: H/2, vx: W*0.012, vy: H*0.008, r: 6, speed: W*0.012 };
-        paddle1 = { x: 10, y: H/2 - H*0.1, w: 8, h: H*0.2 };
-        paddle2 = { x: W - 18, y: H/2 - H*0.1, w: 8, h: H*0.2 };
+    if(ball.y-ballR<=pBot+10&&ball.y+ballR>=pBot&&ball.vy>0){
+        var px=W/2+paddles[1].x;
+        if(Math.abs(ball.x)<paddleW/2+ballR){ball.vy*=-1.05;ball.y=pBot-ballR-1;ball.vx+=(ball.x-px)*0.01;}
     }
+    // Skor
+    if(ball.y>mBot+20){scorePoint(1);}
+    if(ball.y<mTop-20){scorePoint(0);}
+}
 
-    function resetBall() {
-        var W = canvas.width, H = canvas.height;
-        ball.x = W/2; ball.y = H/2;
-        var angle = (Math.random() - 0.5) * Math.PI / 3;
-        var dir = Math.random() > 0.5 ? 1 : -1;
-        ball.vx = Math.cos(angle) * ball.speed * dir;
-        ball.vy = Math.sin(angle) * ball.speed;
+function serveBall2D(){
+    var dir=servingPlayer===0?1:-1;
+    ball.x=0;ball.y=0;
+    ball.vx=(Math.random()-0.5)*2;
+    ball.vy=dir*4;
+    serving=false;
+}
+
+// ─── 3D Rendering ───
+function render3D(){
+    if(!renderer)return;
+    // Paddle pozisyonları
+    paddleMeshes[0].position.x=paddles[0].x;
+    paddleMeshes[1].position.x=paddles[1].x;
+    // Ball pozisyonu
+    ballMesh3d.position.x=ball.x;
+    ballMesh3d.position.z=ball.y;
+    ballMesh3d.rotation.z+=ball.vx*0.3;
+    ballMesh3d.rotation.x+=ball.vy*0.1;
+    // Kamera
+    var camDist=4.5;
+    camera.position.y=camDist;
+    camera.position.z=camDist*0.5;
+    camera.lookAt(0,0,0);
+    renderer.render(scene,camera);
+}
+
+function update3D(){
+    if(serving)return;
+    var limitX=(tableW/2)-0.4,limitZ=(tableH/2)-0.3;
+    ball.x+=ball.vx*0.02;ball.y+=ball.vy*0.02;
+    if(Math.abs(ball.x)>limitX){ball.vx*=-1;ball.x=Math.sign(ball.x)*limitX;}
+    // Paddle çarpışma (3D)
+    var p1z=-limitZ,p2z=limitZ;
+    if(ball.vy<0&&ball.y<=p1z+0.15&&ball.y>=p1z-0.1&&Math.abs(ball.x-paddles[0].x)<0.5){
+        ball.vy*=-1.1;ball.y=p1z+0.15;ball.vx+=(ball.x-paddles[0].x)*0.5;
     }
-
-    function startGame() {
-        score = [0, 0];
-        document.getElementById('s1').textContent = '0';
-        document.getElementById('s2').textContent = '0';
-        document.getElementById('overlay').classList.remove('show');
-        initObjects();
-        if (viewMode === '3d' && ball3d) reset3dBall();
-        gameRunning = true;
-        if (animFrame) cancelAnimationFrame(animFrame);
-        gameLoop();
+    if(ball.vy>0&&ball.y>=p2z-0.15&&ball.y<=p2z+0.1&&Math.abs(ball.x-paddles[1].x)<0.5){
+        ball.vy*=-1.1;ball.y=p2z-0.15;ball.vx+=(ball.x-paddles[1].x)*0.5;
     }
+    // Skor
+    if(ball.y>p2z+1){scorePoint(0);}
+    if(ball.y<p1z-1){scorePoint(1);}
+}
 
-    function gameLoop() {
-        if (!gameRunning) return;
-        update();
-        if (viewMode === '2d') draw2d();
-        else draw3d();
-        animFrame = requestAnimationFrame(gameLoop);
+function serveBall3D(){
+    var dir=servingPlayer===0?1:-1;
+    ball.x=0;ball.y=0;
+    ball.vx=(Math.random()-0.5)*0.5;
+    ball.vy=dir*0.12;
+    serving=false;
+}
+
+// ─── Game Logic ───
+function scorePoint(player){
+    score[player]++;updateScoreUI();
+    serving=true;servingPlayer=1-player;
+    ball.vx=0;ball.vy=0;
+    if(viewMode==='2d'){ball.x=0;ball.y=0;}else{ball.x=0;ball.y=0;}
+    updateStatus(servingPlayer===0?'Sen servis yap!':'AI servis yapıyor...');
+    if(score[player]>=WIN){
+        var winText=(player===0?'Sen':'AI')+' Kazandı! 🏆';
+        document.getElementById('winText').textContent=winText;
+        document.getElementById('overlay').classList.add('show');
+        return;
     }
+    if(gameMode==='ai'&&servingPlayer===1)setTimeout(serveBall,1000);
+}
 
-    function update() {
-        var W = canvas.width, H = canvas.height;
-        ball.x += ball.vx;
-        ball.y += ball.vy;
+function serveBall(){
+    if(viewMode==='3d')serveBall3D();else serveBall2D();
+}
 
-        if (ball.y - ball.r <= 0) { ball.y = ball.r; ball.vy = Math.abs(ball.vy); }
-        if (ball.y + ball.r >= H) { ball.y = H - ball.r; ball.vy = -Math.abs(ball.vy); }
+function updateScoreUI(){
+    document.getElementById('s1').textContent='Sen '+score[0];
+    document.getElementById('s2').textContent='AI '+score[1];
+    document.getElementById('s1').classList.toggle('active',!serving&&servingPlayer===0);
+    document.getElementById('s2').classList.toggle('active',!serving&&servingPlayer===1);
+}
 
-        // Paddle 1 çarpışma
-        if (ball.x - ball.r <= paddle1.x + paddle1.w && ball.y >= paddle1.y && ball.y <= paddle1.y + paddle1.h && ball.vx < 0) {
-            ball.vx = Math.abs(ball.vx) * 1.03;
-            var hit1 = (ball.y - paddle1.y) / paddle1.h - 0.5;
-            ball.vy = hit1 * H * 0.015;
-            ball.x = paddle1.x + paddle1.w + ball.r;
-        }
-        // Paddle 2 çarpışma
-        if (ball.x + ball.r >= paddle2.x && ball.y >= paddle2.y && ball.y <= paddle2.y + paddle2.h && ball.vx > 0) {
-            ball.vx = -Math.abs(ball.vx) * 1.03;
-            var hit2 = (ball.y - paddle2.y) / paddle2.h - 0.5;
-            ball.vy = hit2 * H * 0.015;
-            ball.x = paddle2.x - ball.r;
-        }
+function updateStatus(msg){document.getElementById('status').textContent=msg;}
 
-        // Gol
-        if (ball.x < 0) { score[1]++; document.getElementById('s2').textContent = score[1]; checkWin(); resetBall(); }
-        if (ball.x > W) { score[0]++; document.getElementById('s1').textContent = score[0]; checkWin(); resetBall(); }
-
-        // Paddle 1 kontrolü
-        if (keys['ArrowUp'] || keys['w'] || touchDir === -1) paddle1.y = Math.max(0, paddle1.y - H * 0.02);
-        if (keys['ArrowDown'] || keys['s'] || touchDir === 1) paddle1.y = Math.min(H - paddle1.h, paddle1.y + H * 0.02);
-
-        // Paddle 2 kontrolü (AI)
-        if (gameMode === 'ai') {
-            var target2 = ball.y - paddle2.h / 2;
-            if (ball.vx > 0) paddle2.y += (target2 - paddle2.y) * 0.08;
-            else paddle2.y += (H / 2 - paddle2.h / 2 - paddle2.y) * 0.03;
-            paddle2.y = Math.max(0, Math.min(H - paddle2.h, paddle2.y));
-        } else {
-            // 2P: ok tuşlarıyla kontrol
-            if (keys['i']) paddle2.y = Math.max(0, paddle2.y - H * 0.02);
-            if (keys['k']) paddle2.y = Math.min(H - paddle2.h, paddle2.y + H * 0.02);
-        }
+function gameLoop(){
+    requestAnimationFrame(gameLoop);
+    if(viewMode==='3d'){
+        update3D();render3D();
+    }else{
+        update2D();render2D();
     }
+}
 
-    function checkWin() {
-        if (score[0] >= WIN_SCORE) {
-            gameRunning = false;
-            document.getElementById('winText').textContent = '🏆 Sol Oyuncu Kazandı!';
-            document.getElementById('winSub').textContent = score[0] + ' - ' + score[1];
-            document.getElementById('overlay').classList.add('show');
-        }
-        if (score[1] >= WIN_SCORE) {
-            gameRunning = false;
-            var w = gameMode === 'ai' ? '🤖 AI' : 'Sağ Oyuncu';
-            document.getElementById('winText').textContent = '🏆 ' + w + ' Kazandı!';
-            document.getElementById('winSub').textContent = score[0] + ' - ' + score[1];
-            document.getElementById('overlay').classList.add('show');
-        }
+// ─── AI ───
+function aiMove(){
+    if(gameMode!=='ai'||serving)return;
+    var target=ball.x*0.8;
+    var diff=target-paddles[1].x;
+    paddles[1].x+=Math.max(-0.06,Math.min(0.06,diff));
+}
+
+function aiServe(){
+    if(gameMode==='ai'&&servingPlayer===1&&serving){
+        updateStatus('AI servis yapıyor...');
+        setTimeout(serveBall,1200);
     }
+}
 
-    // ═══ 2D ÇİZİM ═══
-    function draw2d() {
-        var W = canvas.width, H = canvas.height;
-        ctx.fillStyle = '#1a1a2e';
-        ctx.fillRect(0, 0, W, H);
+// ─── Input ───
+function setupControls(){
+    document.getElementById('btnL').addEventListener('touchstart',function(e){e.preventDefault();touchLeft=true;});
+    document.getElementById('btnL').addEventListener('touchend',function(e){e.preventDefault();touchLeft=false;});
+    document.getElementById('btnR').addEventListener('touchstart',function(e){e.preventDefault();touchRight=true;});
+    document.getElementById('btnR').addEventListener('touchend',function(e){e.preventDefault();touchRight=false;});
+    document.getElementById('btnS').addEventListener('click',function(){if(serving)serveBall();});
+    document.getElementById('btnNew').addEventListener('click',resetGame);
+    document.getElementById('btnAgain').addEventListener('click',function(){resetGame();});
 
-        // Orta çizgi
-        ctx.setLineDash([5, 5]);
-        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(W/2, 0);
-        ctx.lineTo(W/2, H);
-        ctx.stroke();
-        ctx.setLineDash([]);
+    document.addEventListener('keydown',function(e){keys[e.key]=true;});
+    document.addEventListener('keyup',function(e){keys[e.key]=false;});
 
-        // Paddle'lar
-        ctx.shadowColor = '#00d4ff';
-        ctx.shadowBlur = 15;
-        ctx.fillStyle = '#00d4ff';
-        ctx.fillRect(paddle1.x, paddle1.y, paddle1.w, paddle1.h);
-
-        ctx.shadowColor = '#ff4081';
-        ctx.fillStyle = '#ff4081';
-        ctx.fillRect(paddle2.x, paddle2.y, paddle2.w, paddle2.h);
-        ctx.shadowBlur = 0;
-
-        // Top
-        ctx.shadowColor = '#ffffff';
-        ctx.shadowBlur = 20;
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-    }
-
-    // ═══ 3D (Three.js) ═══
-    function init3d() {
-        var W = Math.min(window.innerWidth - 16, 420);
-        var H = W * 0.65;
-        var container = document.getElementById('canvas3d');
-
-        scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x1a1a2e);
-
-        camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 1000);
-        camera.position.set(0, 8, 12);
-        camera.lookAt(0, 0, 0);
-
-        renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(W, H);
-        renderer.shadowMap.enabled = true;
-        container.appendChild(renderer.domElement);
-
-        // Işık
-        var amb = new THREE.AmbientLight(0x404060, 0.6);
-        scene.add(amb);
-        var dir = new THREE.DirectionalLight(0xffffff, 0.8);
-        dir.position.set(5, 10, 7);
-        dir.castShadow = true;
-        scene.add(dir);
-        var spot = new THREE.PointLight(0x00d4ff, 0.5, 30);
-        spot.position.set(0, 5, 0);
-        scene.add(spot);
-
-        // Masa
-        var tableGeo = new THREE.BoxGeometry(12, 0.3, 6);
-        var tableMat = new THREE.MeshPhongMaterial({ color: 0x1565C0, shininess: 60 });
-        table3d = new THREE.Mesh(tableGeo, tableMat);
-        table3d.position.y = -0.15;
-        table3d.receiveShadow = true;
-        scene.add(table3d);
-
-        // Masa çizgileri
-        var lineGeo = new THREE.PlaneGeometry(0.05, 6);
-        var lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.4 });
-        var midLine = new THREE.Mesh(lineGeo, lineMat);
-        midLine.rotation.x = -Math.PI / 2;
-        midLine.position.y = 0.01;
-        scene.add(midLine);
-
-        // Üst çizgi
-        var topLineGeo = new THREE.PlaneGeometry(12, 0.05);
-        var topLine = new THREE.Mesh(topLineGeo, lineMat);
-        topLine.rotation.x = -Math.PI / 2;
-        topLine.position.y = 0.01;
-        topLine.position.z = -2.9;
-        scene.add(topLine);
-        var botLine = topLine.clone();
-        botLine.position.z = 2.9;
-        scene.add(botLine);
-
-        // Raket 1 (sol - mavi)
-        var pGeo = new THREE.BoxGeometry(0.3, 1.2, 0.3);
-        var pMat1 = new THREE.MeshPhongMaterial({ color: 0x00d4ff, shininess: 80 });
-        paddle1_3d = new THREE.Mesh(pGeo, pMat1);
-        paddle1_3d.position.set(-5.5, 0.6, 0);
-        paddle1_3d.castShadow = true;
-        scene.add(paddle1_3d);
-
-        // Raket 2 (sağ - pembe)
-        var pMat2 = new THREE.MeshPhongMaterial({ color: 0xff4081, shininess: 80 });
-        paddle23d = new THREE.Mesh(pGeo.clone(), pMat2);
-        paddle23d.position.set(5.5, 0.6, 0);
-        paddle23d.castShadow = true;
-        scene.add(paddle23d);
-
-        // Top
-        var bGeo = new THREE.SphereGeometry(0.25, 16, 16);
-        var bMat = new THREE.MeshPhongMaterial({ color: 0xffffff, emissive: 0x888888, shininess: 100 });
-        ball3d = new THREE.Mesh(bGeo, bMat);
-        ball3d.position.set(0, 0.25, 0);
-        ball3d.castShadow = true;
-        scene.add(ball3d);
-
-        // Kenarlar (duvarlar)
-        var wallGeo = new THREE.BoxGeometry(12, 0.5, 0.1);
-        var wallMat = new THREE.MeshPhongMaterial({ color: 0x333355, transparent: true, opacity: 0.5 });
-        var wallTop = new THREE.Mesh(wallGeo, wallMat);
-        wallTop.position.set(0, 0.25, -3);
-        scene.add(wallTop);
-        var wallBot = wallTop.clone();
-        wallBot.position.z = 3;
-        scene.add(wallBot);
-    }
-
-    function reset3dBall() {
-        ball3d.position.set(0, 0.25, 0);
-    }
-
-    function draw3d() {
-        if (!scene) return;
-
-        // 2D konumları 3D'ye çevir
-        var W = canvas.width, H = canvas.height;
-        var x3 = ((ball.x / W) - 0.5) * 12;
-        var z3 = ((ball.y / H) - 0.5) * 6;
-        ball3d.position.x = x3;
-        ball3d.position.z = z3;
-        ball3d.position.y = 0.25;
-
-        // Paddle'ları güncelle
-        var p1z = ((paddle1.y + paddle1.h/2) / H - 0.5) * 6;
-        var p2z = ((paddle2.y + paddle2.h/2) / H - 0.5) * 6;
-        paddle1_3d.position.z = p1z;
-        paddle23d.position.z = p2z;
-
-        renderer.render(scene, camera);
-    }
-
-    // ═══ GİRDİ ═══
-    document.addEventListener('keydown', function(e) { keys[e.key] = true; e.preventDefault(); });
-    document.addEventListener('keyup', function(e) { keys[e.key] = false; });
-
-    var btnUp = document.getElementById('btnUp');
-    var btnDown = document.getElementById('btnDown');
-    btnUp.addEventListener('touchstart', function(e) { e.preventDefault(); touchDir = -1; });
-    btnUp.addEventListener('touchend', function() { touchDir = 0; });
-    btnDown.addEventListener('touchstart', function(e) { e.preventDefault(); touchDir = 1; });
-    btnDown.addEventListener('touchend', function() { touchDir = 0; });
-
-    canvas.addEventListener('touchstart', function(e) {
+    // Swipe ile paddle hareketi
+    var startX=0;
+    document.getElementById('gameContainer').addEventListener('touchstart',function(e){
+        startX=e.touches[0].clientX;e.preventDefault();
+    },{passive:false});
+    document.getElementById('gameContainer').addEventListener('touchmove',function(e){
         e.preventDefault();
-        if (!gameRunning) startGame();
-    });
-    canvas.addEventListener('touchmove', function(e) {
-        e.preventDefault();
-        var rect = canvas.getBoundingClientRect();
-        var touchY = e.touches[0].clientY - rect.top;
-        paddle1.y = Math.max(0, Math.min(canvas.height - paddle1.h, touchY - paddle1.h / 2));
-    });
+        var dx=e.touches[0].clientX-startX;
+        var maxMove=viewMode==='3d'?1.5:W/2-40;
+        paddles[0].x=Math.max(-maxMove,Math.min(maxMove,dx*0.01));
+    },{passive:false});
+}
 
-    canvas.addEventListener('click', function() { if (!gameRunning) startGame(); });
+// ─── Input Process ───
+function processInput(){
+    var speed=viewMode==='3d'?0.08:5;
+    var max=viewMode==='3d'?1.5:W/2-40;
+    if(touchLeft||keys['ArrowLeft']||keys['a'])paddles[0].x=Math.max(-max,paddles[0].x-speed);
+    if(touchRight||keys['ArrowRight']||keys['d'])paddles[0].x=Math.min(max,paddles[0].x+speed);
+    aiMove();
+}
 
-    initObjects();
-    draw2d();
-    </script>
+function resetGame(){
+    score=[0,0];serving=true;servingPlayer=0;
+    ball.x=0;ball.y=0;ball.vx=0;ball.vy=0;
+    paddles[0].x=0;paddles[1].x=0;
+    updateScoreUI();updateStatus('Sen servis yap!');
+    document.getElementById('overlay').classList.remove('show');
+    aiServe();
+}
+
+function switchView(mode){
+    viewMode=mode;
+    document.getElementById('v2d').classList.toggle('active',mode==='2d');
+    document.getElementById('v3d').classList.toggle('active',mode==='3d');
+    if(mode==='3d')init3D();else init2D();
+}
+
+// ─── Game Loop Wrapper ───
+var mainLoop=function(){
+    processInput();
+    requestAnimationFrame(mainLoop);
+};
+
+// ─── Init ───
+document.getElementById('v2d').addEventListener('click',function(){switchView('2d');});
+document.getElementById('v3d').addEventListener('click',function(){switchView('3d');});
+document.getElementById('mAi').addEventListener('click',function(){gameMode='ai';document.getElementById('mAi').classList.add('active');document.getElementById('m2p').classList.remove('active');resetGame();});
+document.getElementById('m2p').addEventListener('click',function(){gameMode='2p';document.getElementById('m2p').classList.add('active');document.getElementById('mAi').classList.remove('active');resetGame();});
+
+setupControls();
+init3D();
+gameLoop();
+mainLoop();
+aiServe();
+})();
+</script>
 </body>
 </html>
