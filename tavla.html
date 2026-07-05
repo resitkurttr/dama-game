@@ -1,331 +1,458 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>🎲 Tavla King</title>
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-        body{background:linear-gradient(135deg,#2c1810,#4a2c1a);min-height:100vh;display:flex;flex-direction:column;align-items:center;font-family:'Segoe UI',sans-serif;color:white;padding:6px;gap:6px;user-select:none}
-        h1{font-size:18px;text-shadow:0 0 15px rgba(210,180,120,0.5)}
-        .mode-bar{display:flex;gap:3px;background:rgba(255,255,255,0.1);border-radius:14px;padding:2px}
-        .mode-btn{padding:4px 10px;border:none;border-radius:12px;background:transparent;color:rgba(255,255,255,0.5);cursor:pointer;font-size:11px}
-        .mode-btn.active{background:rgba(255,215,0,0.3);color:#FFD700}
-        .players{display:flex;justify-content:space-between;width:100%;max-width:440px;font-size:12px;padding:0 4px}
-        .player{padding:4px 10px;border-radius:6px;background:rgba(255,255,255,0.08)}
-        .player.on{background:rgba(255,215,0,0.2);border:1px solid gold}
-        #board{width:100%;max-width:440px;margin:4px auto}
-        svg{width:100%;display:block}
-        .dice-bar{display:flex;gap:8px;justify-content:center;padding:4px}
-        .die{width:34px;height:34px;background:white;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;color:#333}
-        .die.off{opacity:0.25}
-        .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
-        .btn{padding:7px 16px;font-size:12px;border:none;border-radius:12px;cursor:pointer;font-weight:bold}
-        .g{background:linear-gradient(145deg,#FFD700,#FFA500);color:#1a1a2e}
-        .r{background:linear-gradient(145deg,#f44336,#b71c1c);color:white}
-        .gr{background:linear-gradient(145deg,#4CAF50,#2E7D32);color:white}
-        .st{font-size:12px;padding:4px 12px;background:rgba(255,255,255,0.08);border-radius:10px;text-align:center}
-        .ov{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:12px}
-        .ov.show{display:flex}
-        .ov h2{font-size:22px;text-shadow:0 0 25px gold}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>🎲 Tavla</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#1a0e08;font-family:sans-serif;color:#fff}
+body{display:flex;flex-direction:column}
+#hdr{display:flex;justify-content:center;gap:4px;padding:5px;background:#111;flex-shrink:0}
+#hdr button{padding:4px 10px;border:none;border-radius:8px;font-size:11px;cursor:pointer;background:#222;color:#aaa}
+#hdr button.on{background:#FFD700;color:#000}
+#info{display:flex;justify-content:space-between;padding:3px 10px;font-size:11px;background:#111;flex-shrink:0}
+#info .on{color:#FFD700;font-weight:bold}
+#game{flex:1;position:relative;overflow:hidden;min-height:0}
+#game canvas{display:block;width:100%;height:100%}
+#ctl{display:flex;justify-content:center;gap:6px;padding:6px;background:#111;flex-shrink:0}
+#ctl button{padding:6px 14px;border:none;border-radius:8px;font-size:12px;cursor:pointer}
+#ctl .g{background:#4CAF50;color:#fff}
+#ctl .r{background:#e53935;color:#fff}
+#ctl .y{background:#FFC107;color:#000}
+#dice{display:flex;justify-content:center;gap:8px;padding:4px;flex-shrink:0;background:#111}
+.die{width:36px;height:36px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;color:#333}
+.die.off{opacity:.3}
+#msg{text-align:center;padding:2px;font-size:11px;color:#888;background:#0a0a0a;flex-shrink:0}
+.win{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:50;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.win.show{display:flex}
+.win h2{font-size:20px}
+.win button{padding:10px 20px;border:none;border-radius:10px;background:#4CAF50;color:#fff;font-size:14px;cursor:pointer}
+</style>
 </head>
 <body>
-    <h1>🎲 Tavla King</h1>
-    <div class="mode-bar">
-        <button class="mode-btn active" id="mAi">🤖 AI</button>
-        <button class="mode-btn" id="m2p">👥 2 Kişi</button>
-    </div>
-    <div class="players">
-        <div class="player on" id="p1"><span id="p1n">⚫ Sen</span> <span id="p1out" style="font-size:10px;opacity:0.7">Dış: 0</span></div>
-        <div class="player" id="p2"><span id="p2n">⚪ AI</span> <span id="p2out" style="font-size:10px;opacity:0.7">Dış: 0</span></div>
-    </div>
-    <div id="board"><svg viewBox="0 0 500 320" id="svgBoard"></svg></div>
-    <div class="dice-bar"><div class="die" id="d1">-</div><div class="die" id="d2">-</div></div>
-    <div class="st" id="st">🎲 Zar at!</div>
-    <div class="btns">
-        <button class="btn g" id="bRoll">🎲 Zar At</button>
-        <button class="btn gr" id="bNew">🔄 Yeni</button>
-        <button class="btn r" id="bPass">⏭️ Pas</button>
-    </div>
-    <div class="ov" id="ov"><h2 id="wT"></h2><button class="btn gr" id="bAg">🔄 Tekrar</button></div>
+<div id="hdr">
+  <button class="on" id="mAi">🤖 AI</button>
+  <button id="m2p">👥 2 Kişi</button>
+</div>
+<div id="info"><span id="n1" class="on">⚫ Sen (0)</span><span id="n2">⚪ Rakip (0)</span></div>
+<div id="game"></div>
+<div id="dice"><div class="die" id="d1">?</div><div class="die" id="d2">?</div></div>
+<div id="msg">🎲 Zar at!</div>
+<div id="ctl">
+  <button class="y" id="bRoll">🎲 Zar At</button>
+  <button class="g" id="bPass">⏭️ Pas</button>
+  <button class="r" id="bNew">🔄 Yeni</button>
+</div>
+<div class="win" id="win"><h2 id="wT"></h2><button id="bR">🔄 Tekrar</button></div>
 
 <script>
-(function(){
-var cur=0,d=[0,0],du=[false,false],pts=[],sel=-1,rolled=false,mode='ai',aiGo=false;
-var svg=document.getElementById('svgBoard');
+// ═══════════════════════════════════════
+//  TAVLA — Canvas Backgammon
+// ═══════════════════════════════════════
+var cvs,cx,W,H;
+var pts=[],cur=0,dice=[0,0],used=[false,false],sel=-1,rolled=false,mode='ai',aiTurn=false;
+var borne=[0,0]; // borne off counts
 
 function init(){
-    cur=Math.random()>0.5?0:1;d=[0,0];du=[false,false];
-    pts=[];
-    for(var i=0;i<26;i++){pts.push(0);pts.push(0);}
-    // Tavla dizilimi: Her oyuncu için 24 nokta
-    // Oyuncu 0 (beyaz/AI): nokta 24'te 2, 13'te 5, 8'de 3, 6'de 5
-    // Oyuncu 1 (siyah/Sen): nokta 1'de 2, 12'de 5, 17'de 3, 19'de 5
-    setP(0,24,2);setP(0,13,5);setP(0,8,3);setP(0,6,5);
-    setP(1,1,2);setP(1,12,5);setP(1,17,3);setP(1,19,5);
-    sel=-1;rolled=false;aiGo=false;
-    document.getElementById('d1').textContent='-';
-    document.getElementById('d2').textContent='-';
-    document.getElementById('d1').classList.remove('off');
-    document.getElementById('d2').classList.remove('off');
-    draw();updStatus();updPlayers();
-    document.getElementById('ov').classList.remove('show');
-    if(cur===1&&mode==='ai')aiStart();
+  pts=[];
+  for(var i=0;i<26;i++){pts.push(0);pts.push(0);}
+  // Standard backgammon setup
+  // Player 0 (white/bottom): 2@24, 5@13, 3@8, 5@6
+  // Player 1 (black/top): 2@1, 5@12, 3@17, 5@19
+  setP(0,24,2);setP(0,13,5);setP(0,8,3);setP(0,6,5);
+  setP(1,1,2);setP(1,12,5);setP(1,17,3);setP(1,19,5);
+  cur=Math.random()>0.5?1:0;
+  dice=[0,0];used=[false,false];sel=-1;rolled=false;borne=[0,0];
+  aiTurn=false;
+  updDice();
+  updInfo();
+  setMsg('🎲 Zar at!');
+  document.getElementById('win').classList.remove('show');
+  if(cur===1&&mode==='ai')setTimeout(aiRoll,500);
 }
 
-function getP(p,i){return pts[p*25+i];}
-function setP(p,i,v){pts[p*25+i]=v;}
+function setP(p,i,v){pts[p*26+i]=v;}
+function getP(p,i){return pts[p*26+i];}
 
+function setupCanvas(){
+  var box=document.getElementById('game');
+  if(cvs){box.removeChild(cvs);}
+  cvs=document.createElement('canvas');
+  box.appendChild(cvs);
+  cx=cvs.getContext('2d');
+  W=box.clientWidth;H=box.clientHeight;
+  cvs.width=W;cvs.height=H;
+}
+
+// ═══ DRAWING ═══
 function draw(){
-    svg.innerHTML='';
-    // Arka plan
-    add('rect',{x:0,y:0,width:500,height:320,fill:'#3d2817',rx:8});
-    add('rect',{x:4,y:4,width:492,height:312,fill:'#654321',rx:6,stroke:'#8B4513',strokeWidth:2});
+  cx.fillStyle='#3d2817';cx.fillRect(0,0,W,H);
+  // Board border
+  cx.fillStyle='#654321';
+  cx.fillRect(2,2,W-4,H-4);
+  cx.fillStyle='#4a3525';
+  cx.fillRect(W/2-6,2,12,H-4);
 
-    // 24 nokta (+ bar)
-    for(var i=1;i<=24;i++){
-        var px=nx(i),top=i>=13;
-        var c=i%2===0?'#c0392b':'#ecf0f1';
-        if(top){
-            add('polygon',{points:px+',14 '+(px-16)+',150 '+(px+16)+',150',fill:c,opacity:0.85});
-        }else{
-            add('polygon',{points:px+',306 '+(px-16)+',170 '+(px+16)+',170',fill:c,opacity:0.85});
-        }
-        // Nokta numarası
-        var ty=top?10:316;
-        add('text',{x:px,y:ty,textAnchor:'middle',fill:'rgba(255,255,255,0.3)',fontSize:7},String(i));
+  var boardL=6,boardR=W-6,boardT=6,boardB=H-6;
+  var midX=W/2;
+  var ptW=(midX-12)/6;
+  var topH=(boardB-boardT)/2-4;
+  var gap=4;
 
-        // Taşları çiz
-        drawStones(i,px,top);
+  // Draw 24 triangles
+  for(var i=1;i<=24;i++){
+    var col,tx;
+    if(i<=12){
+      tx=boardR-(i-1)*ptW;
+    }else{
+      tx=boardL+(i-13)*ptW;
     }
+    var isTop=i>=13;
+    col=(i%2===0)?'#c0392b':'#ecf0f1';
 
-    // Bar (orta çizgi)
-    add('rect',{x:242,y:4,width:16,height:312,fill:'#4a3525'});
-
-    // Seçili nokta vurgusu
-    if(sel>0){
-        var sx=nx(sel);
-        var sy=sel>=13?12:168;
-        add('rect',{x:sx-18,y:sy,width:36,height:140,fill:'none',stroke:'#FFD700',strokeWidth:3,rx:4,opacity:0.8});
+    cx.fillStyle=col;
+    cx.beginPath();
+    if(isTop){
+      cx.moveTo(tx,boardT);
+      cx.lineTo(tx+ptW/2,boardT+topH);
+      cx.lineTo(tx-ptW/2,boardT+topH);
+    }else{
+      cx.moveTo(tx,boardB);
+      cx.lineTo(tx+ptW/2,boardB-topH);
+      cx.lineTo(tx-ptW/2,boardB-topH);
     }
+    cx.closePath();cx.fill();
 
-    // Dışarı (borne) taşları
-    drawBorne(0,470,80);
-    drawBorne(1,470,240);
+    // Point numbers
+    cx.fillStyle='rgba(255,255,255,0.25)';
+    cx.font='7px sans-serif';cx.textAlign='center';
+    cx.fillText(String(i),tx,isTop?boardT-2:boardB+9);
+  }
 
-    // Ev (bar) alanı
-    add('rect',{x:215,y:135,width:70,height:50,fill:'#2a1a10',rx:4,stroke:'#FFD700',strokeWidth:1,opacity:0.5});
-    var t0=getP(0,25);
-    if(t0>0){
-        add('circle',{cx:250,cy:155,r:10,fill:'#f0e6d0',stroke:'#c4a882',strokeWidth:1.5});
-        if(t0>1)add('text',{x:250,y:159,textAnchor:'middle',fill:'#333',fontSize:9,fontWeight:'bold'},String(t0));
-    }
+  // Draw pieces
+  for(var i=1;i<=24;i++){
+    var tx2;
+    if(i<=12){tx2=boardR-(i-1)*ptW;}
+    else{tx2=boardL+(i-13)*ptW;}
+    var isTop2=i>=13;
+    drawPieces(i,tx2,isTop2,ptW);
+  }
+
+  // Bar pieces
+  drawBarPieces();
+
+  // Borne off
+  drawBorne(0,midX+ptW*3,boardB-10);
+  drawBorne(1,midX-ptW*3,boardT+10);
+
+  // Selection highlight
+  if(sel>0){
+    var sx;
+    if(sel<=12){sx=boardR-(sel-1)*ptW;}
+    else{sx=boardL+(sel-13)*ptW;}
+    cx.strokeStyle='#FFD700';cx.lineWidth=3;
+    var sy=sel>=13?boardT:boardB-topH*2;
+    cx.strokeRect(sx-ptW/2,sy,ptW,topH*2);
+  }
+
+  // Current player indicator
+  cx.fillStyle=cur===0?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.3)';
+  if(cur===0){cx.fillRect(2,boardB-topH-10,W-4,12);}
+  else{cx.fillRect(2,boardT-2,W-4,12);}
 }
 
-function drawStones(point,px,top){
-    var c0=getP(0,point),c1=getP(1,point);
-    var total=c0+c1;
-    if(total===0)return;
+function drawPieces(point,px,isTop,ptW){
+  var c0=getP(0,point),c1=getP(1,point);
+  var total=c0+c1;
+  if(total===0)return;
+  var colors=['#f0e6d0','#1a1a1a'];
+  var strokes=['#c4a882','#444'];
+  var boardB2=H-6,boardT2=6;
+  var topH2=(boardB2-boardT2)/2-4;
+  var maxShow=Math.min(total,6);
 
-    var startY,dir;
-    if(top){startY=22;dir=1;}
-    else{startY=298;dir=-1;}
-
-    // Siyah taşlar (oyuncu 1)
-    for(var j=0;j<c1;j++){
-        var cy=startY+dir*j*21;
-        add('circle',{cx:px,cy:cy,r:9,fill:'#1a1a1a',stroke:'#555',strokeWidth:1.5});
-        if(c1>5&&j===Math.floor(c1/2)){
-            add('text',{x:px,y:cy+3,textAnchor:'middle',fill:'#FFD700',fontSize:8,fontWeight:'bold'},String(c1));
-        }
+  for(var j=0;j<maxShow;j++){
+    var pColor=c0>0?colors[0]:colors[1];
+    var pStroke=c0>0?strokes[0]:strokes[1];
+    var py;
+    if(isTop){
+      py=boardT2+10+j*13;
+    }else{
+      py=boardB2-10-j*13;
     }
-    // Beyaz taşlar (oyuncu 0) - sadece çoklu noktalarda
-    for(var j=0;j<c0;j++){
-        var cy=startY+dir*(c1+j)*21;
-        add('circle',{cx:px,cy:cy,r:9,fill:'#f5f0e8',stroke:'#c4a882',strokeWidth:1.5});
-        if(c0>5&&j===Math.floor(c0/2)){
-            add('text',{x:px,y:cy+3,textAnchor:'middle',fill:'#333',fontSize:8,fontWeight:'bold'},String(c0));
-        }
-    }
+    cx.fillStyle=pColor;cx.strokeStyle=pStroke;cx.lineWidth=1;
+    cx.beginPath();cx.arc(px,py,5.5,0,Math.PI*2);cx.fill();cx.stroke();
+  }
+  if(total>6){
+    cx.fillStyle='#FFD700';cx.font='bold 8px sans-serif';cx.textAlign='center';
+    cx.fillText(String(total),px,isTop?boardT2+10+6*13+2:boardB2-10-6*13-2);
+  }
 }
 
-function drawBorne(p,cx,cy){
-    var cnt=getP(p,25);
-    if(cnt===0)return;
-    add('rect',{x:cx-18,y:cy-45,width:36,height:90,fill:'#2a1a10',rx:4,stroke:'#555',strokeWidth:1});
-    var color=p===0?'#f5f0e8':'#1a1a1a';
-    var stroke=p===0?'#c4a882':'#555';
-    for(var j=0;j<Math.min(cnt,5);j++){
-        add('circle',{cx:cx,cy:cy-30+j*15,r:6,fill:color,stroke:stroke,strokeWidth:1});
-    }
-    if(cnt>5)add('text',{x:cx,y:cy+38,textAnchor:'middle',fill:'#FFD700',fontSize:9,fontWeight:'bold'},String(cnt));
+function drawBarPieces(){
+  var midX=W/2;
+  var b0=getP(0,0),b1=getP(1,0);
+  var colors=['#f0e6d0','#1a1a1a'];
+  var strokes=['#c4a882','#444'];
+  for(var j=0;j<Math.min(b0,5);j++){
+    cx.fillStyle=colors[0];cx.strokeStyle=strokes[0];cx.lineWidth=1;
+    cx.beginPath();cx.arc(midX-30,H/2-30+j*13,5.5,0,Math.PI*2);cx.fill();cx.stroke();
+  }
+  if(b0>5){cx.fillStyle='#FFD700';cx.font='bold 8px sans-serif';cx.textAlign='center';cx.fillText(String(b0),midX-30,H/2-30+5*13+2);}
+  for(var j=0;j<Math.min(b1,5);j++){
+    cx.fillStyle=colors[1];cx.strokeStyle=strokes[1];cx.lineWidth=1;
+    cx.beginPath();cx.arc(midX+30,H/2-30+j*13,5.5,0,Math.PI*2);cx.fill();cx.stroke();
+  }
+  if(b1>5){cx.fillStyle='#FFD700';cx.font='bold 8px sans-serif';cx.textAlign='center';cx.fillText(String(b1),midX+30,H/2-30+5*13+2);}
 }
 
-function nx(i){return i<=12?468-(i-1)*20:32+(i-13)*20+8;}
-
-function add(tag,attrs,text){
-    var el=document.createElementNS('http://www.w3.org/2000/svg',tag);
-    for(var k in attrs)el.setAttribute(k,attrs[k]);
-    if(text!==undefined)el.textContent=text;
-    svg.appendChild(el);
-    return el;
+function drawBorne(p,px,py){
+  var cnt=borne[p];
+  if(cnt===0)return;
+  var c=p===0?'#f0e6d0':'#1a1a1a';
+  var s=p===0?'#c4a882':'#444';
+  cx.fillStyle='rgba(255,215,0,0.15)';
+  cx.fillRect(px-15,py-20,30,40);
+  cx.strokeStyle='#FFD700';cx.lineWidth=1;
+  cx.strokeRect(px-15,py-20,30,40);
+  for(var j=0;j<Math.min(cnt,5);j++){
+    cx.fillStyle=c;cx.strokeStyle=s;cx.lineWidth=1;
+    cx.beginPath();cx.arc(px,py-12+j*10,5,0,Math.PI*2);cx.fill();cx.stroke();
+  }
+  cx.fillStyle='#FFD700';cx.font='bold 9px sans-serif';cx.textAlign='center';
+  cx.fillText(String(cnt),px,py+25);
 }
 
-function getDice(){var v=[];if(!du[0])v.push(d[0]);if(!du[1])v.push(d[1]);return v;}
-
-function canMove(p,pt){
-    if(getP(p,pt)<=0)return false;
-    var dv=getDice();
-    for(var i=0;i<dv.length;i++){
-        var tgt=p===0?pt-dv[i]:pt+dv[i];
-        if(tgt===0||tgt===25)return true;
-        if(tgt>0&&tgt<25&&getP(p,tgt)<=1)return true;
-    }
-    return false;
+// ═══ GAME LOGIC ═══
+function getDiceValues(){
+  var v=[];
+  if(!used[0])v.push(dice[0]);
+  if(!used[1])v.push(dice[1]);
+  if(dice[0]===dice[1]&&v.length>0){
+    v=[dice[0],dice[0],dice[0],dice[0]];
+    // Remove used
+    var rem=used[0]?1:0;
+    v=v.slice(rem);
+  }
+  return v;
 }
 
-function roll(){
-    if(rolled||aiGo)return;
-    d[0]=1+Math.floor(Math.random()*6);
-    d[1]=1+Math.floor(Math.random()*6);
-    du=[false,false];
-    document.getElementById('d1').textContent=d[0];
-    document.getElementById('d2').textContent=d[1];
-    document.getElementById('d1').classList.remove('off');
-    document.getElementById('d2').classList.remove('off');
-    rolled=true;sel=-1;draw();
-    updStatus(cur===0?'Taş seç!':'AI düşünüyor...');
-    if(cur===1&&mode==='ai')aiGo=true;
+function canMoveFrom(p,pt){
+  if(getP(p,pt)<=0)return false;
+  var dv=getDiceValues();
+  for(var i=0;i<dv.length;i++){
+    var tgt=pt-dv[i]*(p===0?-1:1);
+    if(tgt<0||tgt>25)return false;
+    if(tgt===0||tgt===25)return true;
+    if(getP(p===0?1:0,tgt)<=1)return true;
+  }
+  return false;
 }
 
-function tap(pt){
-    if(!rolled||aiGo)return;
-    if(sel>0){
-        var dv=getDice();
-        for(var i=0;i<dv.length;i++){
-            var tgt=cur===0?sel-dv[i]:sel+dv[i];
-            if(tgt===pt&&(tgt===0||tgt===25||getP(cur,tgt)<=1)){
-                movePiece(sel,tgt);return;
-            }
-        }
-        if(pt===sel){sel=-1;draw();return;}
-    }
-    if(getP(cur,pt)>0&&canMove(cur,pt)){sel=pt;draw();}
+function getMovesFrom(p,pt){
+  var moves=[];
+  var dv=getDiceValues();
+  for(var i=0;i<dv.length;i++){
+    var tgt=pt-dv[i]*(p===0?-1:1);
+    if(tgt<0||tgt>25)continue;
+    if(tgt===0||tgt===25){moves.push({from:pt,to:tgt,di:i});continue;}
+    if(getP(p===0?1:0,tgt)<=1)moves.push({from:pt,to:tgt,di:i});
+  }
+  return moves;
 }
 
-function movePiece(from,to){
-    setP(cur,from,getP(cur,from)-1);
-    if(to===0||to===25)setP(cur,to,getP(cur,to)+1);
-    else setP(cur,to,getP(cur,to)+1);
+function hasAnyMove(){
+  for(var pt=1;pt<=24;pt++){
+    if(getMovesFrom(cur,pt).length>0)return true;
+  }
+  return false;
+}
 
-    // Rakip taşı yeme
-    if(to>0&&to<25){
-        var opp=cur===0?1:0;
-        if(getP(opp,to)===1&&getP(cur,to)>1){
-            setP(opp,to,0);setP(cur,to,1);setP(opp,25,getP(opp,25)+1);
-        }
+function doMove(from,to,di){
+  setP(cur,from,getP(cur,from)-1);
+  if(to===0||to===25){
+    borne[cur]++;
+  }else{
+    setP(cur,to,getP(cur,to)+1);
+    // Hit
+    var opp=cur===0?1:0;
+    if(getP(opp,to)===1&&getP(cur,to)>=1){
+      setP(opp,to,0);setP(opp,0,getP(opp,0)+1);
     }
+  }
+  // Mark die used
+  var diff=Math.abs(from-to);
+  if(dice[0]===dice[1]){
+    // Doubles - use one die per move
+    used[0]=true; // simplified: just mark one
+  }else{
+    if(!used[0]&&dice[0]===diff)used[0]=true;
+    else if(!used[1]&&dice[1]===diff)used[1]=true;
+    else if(!used[0])used[0]=true;
+    else if(!used[1])used[1]=true;
+  }
+  sel=-1;
+  updDice();
+  draw();
+  checkWin();
+}
 
-    var diff=cur===0?(from-to):(to-from);
-    for(var i=0;i<2;i++){if(!du[i]&&d[i]===diff){du[i]=true;break;}}
-    document.getElementById('d1').classList.toggle('off',du[0]);
-    document.getElementById('d2').classList.toggle('off',du[1]);
-    sel=-1;draw();
-
-    // Kazanma kontrolü
-    if(getP(cur,25)>=15){
-        document.getElementById('wT').textContent='🏆 '+(cur===0?'Sen':'AI')+' Kazandı!';
-        document.getElementById('ov').classList.add('show');return;
-    }
-    if(du[0]&&du[1])nextTurn();
-    else updStatus('Taş taşı!');
+function checkWin(){
+  if(borne[cur]>=15){
+    document.getElementById('wT').textContent='🏆 '+(cur===0?'Sen':'Rakip')+' Kazandı!';
+    document.getElementById('win').classList.add('show');
+    return true;
+  }
+  return false;
 }
 
 function nextTurn(){
-    cur=cur===0?1:0;d=[0,0];du=[false,false];rolled=false;sel=-1;
-    document.getElementById('d1').textContent='-';
-    document.getElementById('d2').textContent='-';
-    document.getElementById('d1').classList.remove('off');
-    document.getElementById('d2').classList.remove('off');
-    draw();updPlayers();
-    if(cur===0)updStatus('Sıran - Zar at!');
-    else if(mode==='ai'){updStatus('AI düşünüyor...');aiStart();}
-    else updStatus('Oyuncu 2 - Zar at!');
+  cur=cur===0?1:0;
+  dice=[0,0];used=[false,false];sel=-1;rolled=false;
+  updDice();updInfo();
+  setMsg(cur===0?'🎲 Zar at!':'Rakip oynuyor...');
+  if(cur===1&&mode==='ai')setTimeout(aiRoll,600);
 }
 
-function updPlayers(){
-    document.getElementById('p1').classList.toggle('on',cur===0);
-    document.getElementById('p2').classList.toggle('on',cur===1);
-    document.getElementById('p1out').textContent='Dış: '+getP(0,25);
-    document.getElementById('p2out').textContent='Dış: '+getP(1,25);
-}
-function updStatus(m){document.getElementById('st').textContent=m;}
-
-// ─── AI ───
-function aiStart(){
-    aiGo=true;
-    setTimeout(function(){
-        d[0]=1+Math.floor(Math.random()*6);
-        d[1]=1+Math.floor(Math.random()*6);
-        du=[false,false];
-        document.getElementById('d1').textContent=d[0];
-        document.getElementById('d2').textContent=d[1);
-        rolled=true;draw();
-        aiStep();
-    },500);
+function rollDice(){
+  if(rolled)return;
+  if(checkWin())return;
+  dice=[Math.ceil(Math.random()*6),Math.ceil(Math.random()*6)];
+  used=[false,false];rolled=true;
+  updDice();
+  if(dice[0]===dice[1])setMsg('Yedin! ('+dice[0]+'-'+dice[0]+') İki kez oyna');
+  else setMsg('Seç: hangi taşla oynayacaksın');
+  if(!hasAnyMove()){
+    setMsg('Hamle yok, pas geçiliyor...');
+    setTimeout(nextTurn,800);
+  }
+  draw();
 }
 
-function aiStep(){
-    var best=-1,bestSc=-99,bestD=0;
-    for(var pt=1;pt<=24;pt++){
-        if(getP(1,pt)<=0)continue;
-        var dv=getDice();
-        for(var di=0;di<dv.length;di++){
-            var tgt=1+dv[di];
-            if(pt+dv[di]>25)continue;
-            tgt=pt+dv[di];
-            if(tgt<=0||tgt>25)continue;
-            if(tgt<25&&getP(1,tgt)>1)continue;
-            var sc=0;
-            if(getP(1,tgt)===0)sc+=2;
-            if(tgt>=19)sc+=3;
-            if(tgt===25)sc+=10;
-            if(getP(0,tgt)===1)sc+=4; // rakip taşını ye
-            if(sc>bestSc){bestSc=sc;best=pt;bestD=di;}
+function tap(pt){
+  if(aiTurn||!rolled)return;
+  if(sel<0){
+    // Select piece
+    if(getP(cur,pt)>0&&canMoveFrom(cur,pt)){
+      sel=pt;draw();
+    }
+  }else{
+    // Try to move
+    var moves=getMovesFrom(cur,sel);
+    for(var i=0;i<moves.length;i++){
+      if(moves[i].to===pt){
+        doMove(sel,pt,moves[i].di);
+        // Check if more moves
+        if(getDiceValues().length>0&&hasAnyMove()){
+          setMsg('Devam et!');
+        }else{
+          setTimeout(nextTurn,300);
         }
+        return;
+      }
     }
-    if(best>=0){
-        var dv=getDice();
-        var tgt=1+dv[bestD];
-        movePiece(best,tgt);
-        if(!du[0]&&!du[1])setTimeout(aiStep,400);
-        else aiGo=false;
+    // Can't move there, try selecting new piece
+    if(getP(cur,pt)>0&&canMoveFrom(cur,pt)){
+      sel=pt;draw();
     }else{
-        du=[true,true];
-        document.getElementById('d1').classList.add('off');
-        document.getElementById('d2').classList.add('off');
-        aiGo=false;nextTurn();
+      sel=-1;draw();
     }
+  }
 }
 
-// ─── Events ───
-document.getElementById('bRoll').addEventListener('click',roll);
-document.getElementById('bNew').addEventListener('click',init);
-document.getElementById('bAg').addEventListener('click',init);
-document.getElementById('bPass').addEventListener('click',function(){if(rolled&&!aiGo)nextTurn();});
-document.getElementById('mAi').addEventListener('click',function(){mode='ai';document.getElementById('mAi').classList.add('active');document.getElementById('m2p').classList.remove('active');init();});
-document.getElementById('m2p').addEventListener('click',function(){mode='2p';document.getElementById('m2p').classList.add('active');document.getElementById('mAi').classList.remove('active');init();});
+// ═══ AI ═══
+function aiRoll(){
+  aiTurn=true;
+  rollDice();
+  if(!rolled){aiTurn=false;return;}
+  setTimeout(aiPlay,400);
+}
 
-svg.addEventListener('click',function(e){
-    if(aiGo)return;
-    var r=svg.getBoundingClientRect();
-    var mx=(e.clientX-r.left)/(r.width)*500;
-    for(var i=1;i<=24;i++){if(Math.abs(mx-nx(i))<16){tap(i);return;}}
-});
+function aiPlay(){
+  var dv=getDiceValues();
+  if(dv.length===0){aiTurn=false;nextTurn();return;}
 
+  var bestMove=null,bestScore=-99;
+  for(var pt=1;pt<=24;pt++){
+    if(getP(1,pt)<=0)continue;
+    var moves=getMovesFrom(1,pt);
+    for(var i=0;i<moves.length;i++){
+      var m=moves[i];
+      var sc=0;
+      if(m.to===25)sc+=15; // bearing off
+      if(m.to>=19)sc+=3;
+      if(getP(0,m.to)===1)sc+=4; // hit
+      if(getP(0,m.to)===0)sc+=2; // safe
+      if(m.from>=19)sc+=2;
+      if(sc>bestScore){bestScore=sc;bestMove=m;}
+    }
+  }
+
+  if(bestMove){
+    doMove(bestMove.from,bestMove.to,bestMove.di);
+    if(getDiceValues().length>0&&hasAnyMove()){
+      setTimeout(aiPlay,400);
+    }else{
+      aiTurn=false;
+      setTimeout(nextTurn,300);
+    }
+  }else{
+    aiTurn=false;
+    used=[true,true];
+    nextTurn();
+  }
+}
+
+// ═══ UI HELPERS ═══
+function updDice(){
+  document.getElementById('d1').textContent=dice[0]||'?';
+  document.getElementById('d2').textContent=dice[1]||'?';
+  document.getElementById('d1').className='die'+(used[0]?' off':'');
+  document.getElementById('d2').className='die'+(used[1]?' off':'');
+}
+function updInfo(){
+  document.getElementById('n1').textContent='⚫ Sen ('+borne[0]+')';
+  document.getElementById('n2').textContent='⚪ Rakip ('+borne[1]+')';
+  document.getElementById('n1').className=cur===0?'on':'';
+  document.getElementById('n2').className=cur===1?'on':'';
+}
+function setMsg(t){document.getElementById('msg').textContent=t;}
+
+// ═══ INPUT ═══
+document.getElementById('game').onclick=function(e){
+  if(cur===1&&mode==='ai')return;
+  var r=cvs.getBoundingClientRect();
+  var mx=(e.clientX-r.left)/r.width*W;
+  var my=(e.clientY-r.top)/r.height*H;
+  var boardT=6,boardB=H-6;
+  var midX=W/2;
+  var ptW=(midX-12)/6;
+  var isTop=my<(boardT+boardB)/2;
+
+  for(var i=1;i<=24;i++){
+    var tx;
+    if(i<=12){tx=midX+ptW/2+(i-1)*ptW;}
+    else{tx=midX-ptW/2-(i-13)*ptW;}
+    if(Math.abs(mx-tx)<ptW/2){
+      tap(i);return;
+    }
+  }
+};
+
+document.getElementById('bRoll').onclick=function(){if(!rolled&&!aiTurn)rollDice();};
+document.getElementById('bPass').onclick=function(){if(rolled&&!aiTurn)nextTurn();};
+document.getElementById('bNew').onclick=init;
+document.getElementById('bR').onclick=init;
+document.getElementById('mAi').onclick=function(){mode='ai';this.classList.add('on');document.getElementById('m2p').classList.remove('on');init();};
+document.getElementById('m2p').onclick=function(){mode='2p';this.classList.add('on');document.getElementById('mAi').classList.remove('on');init();};
+
+window.onresize=function(){setupCanvas();draw();};
+
+// ═══ START ═══
+setupCanvas();
 init();
-})();
+draw();
 </script>
 </body>
 </html>
