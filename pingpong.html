@@ -8,432 +8,372 @@
     <style>
         *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
         body{background:#0a0a1a;height:100vh;display:flex;flex-direction:column;font-family:'Segoe UI',sans-serif;color:white;user-select:none;overflow:hidden}
-        #topBar{width:100%;padding:5px 8px;display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,0.6);z-index:10;flex-shrink:0}
-        #topBar h1{font-size:14px}
-        .bar-group{display:flex;gap:3px;background:rgba(255,255,255,0.1);border-radius:14px;padding:2px}
-        .bar-btn{padding:3px 8px;border:none;border-radius:12px;background:transparent;color:rgba(255,255,255,0.5);cursor:pointer;font-size:10px;white-space:nowrap}
-        .bar-btn.active{background:rgba(255,215,0,0.3);color:#FFD700}
-        .bar-btn.v-active{background:rgba(0,180,255,0.3);color:#00B4FF}
-        #scoreBar{display:flex;justify-content:center;gap:10px;padding:3px;font-size:13px;flex-shrink:0}
-        .score{padding:3px 10px;border-radius:6px;background:rgba(255,255,255,0.08)}
-        .score.active{background:rgba(255,215,0,0.2);border:1px solid gold}
-        #gameContainer{flex:1;width:100%;position:relative;touch-action:none;min-height:0}
-        #gameContainer canvas{width:100%!important;height:100%!important;display:block}
-        #controls{width:100%;padding:4px 8px;display:flex;justify-content:center;gap:6px;flex-shrink:0}
-        .ctrl-btn{width:60px;height:44px;border-radius:12px;border:none;font-size:20px;cursor:pointer;touch-action:manipulation}
-        .ctrl-btn:active{transform:scale(0.93)}
-        .ctrl-l{background:linear-gradient(145deg,#e91e63,#c2185b);color:white}
-        .ctrl-r{background:linear-gradient(145deg,#2196f3,#1565c0);color:white}
-        .ctrl-s{background:linear-gradient(145deg,#4CAF50,#2E7D32);color:white}
-        #status{font-size:11px;text-align:center;padding:2px;opacity:0.6;flex-shrink:0}
-        .overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:14px}
-        .overlay.show{display:flex}
-        .overlay h2{font-size:22px;text-shadow:0 0 25px gold}
-        .overlay .btn{padding:10px 24px;font-size:15px;border:none;border-radius:12px;background:linear-gradient(145deg,#4CAF50,#2E7D32);color:white;cursor:pointer}
+        #top{width:100%;padding:4px 6px;display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,0.6);z-index:10;flex-shrink:0}
+        #top h1{font-size:14px}
+        .bg{display:flex;gap:2px;background:rgba(255,255,255,0.1);border-radius:12px;padding:2px}
+        .bb{padding:3px 7px;border:none;border-radius:10px;background:transparent;color:rgba(255,255,255,0.5);cursor:pointer;font-size:10px;white-space:nowrap}
+        .bb.a{background:rgba(255,215,0,0.3);color:#FFD700}
+        .bb.v{background:rgba(0,180,255,0.3);color:#00B4FF}
+        #sb{display:flex;justify-content:center;gap:8px;padding:3px;font-size:12px;flex-shrink:0}
+        .sc{padding:2px 8px;border-radius:6px;background:rgba(255,255,255,0.08)}
+        .sc.a{background:rgba(255,215,0,0.2);border:1px solid gold}
+        #gc{flex:1;width:100%;position:relative;touch-action:none;min-height:0}
+        #gc canvas{width:100%!important;height:100%!important;display:block}
+        #ct{width:100%;padding:4px 6px;display:flex;justify-content:center;gap:6px;flex-shrink:0}
+        .cb{width:56px;height:40px;border-radius:10px;border:none;font-size:18px;cursor:pointer;touch-action:manipulation}
+        .cb:active{transform:scale(0.93)}
+        .cl{background:linear-gradient(145deg,#e91e63,#c2185b);color:white}
+        .cr{background:linear-gradient(145deg,#2196f3,#1565c0);color:white}
+        .cs{background:linear-gradient(145deg,#4CAF50,#2E7D32);color:white}
+        #st{font-size:11px;text-align:center;padding:2px;opacity:0.6;flex-shrink:0}
+        .ov{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+        .ov.show{display:flex}
+        .ov h2{font-size:20px;text-shadow:0 0 25px gold}
+        .ov .btn{padding:10px 24px;font-size:14px;border:none;border-radius:12px;background:linear-gradient(145deg,#4CAF50,#2E7D32);color:white;cursor:pointer}
     </style>
 </head>
 <body>
-    <div id="topBar">
+    <div id="top">
         <h1>🏓 Ping Pong</h1>
-        <div class="bar-group">
-            <button class="bar-btn v-active" id="v3d">3D</button>
-            <button class="bar-btn" id="v2d">2D</button>
+        <div class="bg">
+            <button class="bb v" id="v3d">3D</button>
+            <button class="bb" id="v2d">2D</button>
         </div>
-        <div class="bar-group">
-            <button class="bar-btn active" id="mAi">🤖 AI</button>
-            <button class="bar-btn" id="m2p">👥 2K</button>
+        <div class="bg">
+            <button class="bb a" id="mAi">🤖 AI</button>
+            <button class="bb" id="m2p">👥 2K</button>
         </div>
     </div>
-    <div id="scoreBar">
-        <div class="score active" id="s1">Sen 0</div>
-        <div class="score" id="s2">AI 0</div>
+    <div id="sb">
+        <div class="sc a" id="s1">Sen 0</div>
+        <div class="sc" id="s2">AI 0</div>
     </div>
-    <div id="gameContainer"></div>
-    <div id="controls">
-        <button class="ctrl-btn ctrl-l" id="btnL">◀</button>
-        <button class="ctrl-btn ctrl-s" id="btnS">▶ Servis</button>
-        <button class="ctrl-btn ctrl-r" id="btnR">▶</button>
+    <div id="gc"></div>
+    <div id="ct">
+        <button class="cb cl" id="bL">◀</button>
+        <button class="cb cs" id="bS">▶ Serve</button>
+        <button class="cb cr" id="bR">▶</button>
     </div>
-    <div id="status">Servis ver!</div>
-    <div class="overlay" id="overlay">
-        <h2 id="winText"></h2>
-        <button class="btn" id="btnAgain">🔄 Tekrar Oyna</button>
-    </div>
+    <div id="st">Serve at!</div>
+    <div class="ov" id="ov"><h2 id="wT"></h2><button class="btn" id="bAg">🔄 Tekrar</button></div>
 
 <script>
 (function(){
-var viewMode='3d',gameMode='ai';
-var score=[0,0],WIN=5,serving=true,servingPlayer=0;
-var keys={},touchL=false,touchR=false;
+var vm='3',gm='ai';
+var sc=[0,0],WN=5,serv=true,sP=0;
+var k={},tL=false,tR=false;
 
-// ─── 2D ───
-var canvas,ctx,W2,H2;
-var p2d=[{x:0},{x:0}],ball2={x:0,y:0,vx:0,vy:0};
+// 2D
+var c2,cx2,W2,H2;
+var p2=[{x:0},{x:0}],b2={x:0,y:0,vx:0,vy:0};
 var pw2,ph2,br2;
 
-// ─── 3D ───
-var scene,camera,renderer,clock;
-var pad3d=[],ball3d,tableMesh,camAngle=0;
+// 3D
+var scene,cam,ren,clk;
+var pm=[],b3,shMesh;
+var tbl={w:3,h:5.5};
 
 function init3D(){
-    var c=document.getElementById('gameContainer');
+    var c=document.getElementById('gc');
     var w=c.clientWidth,h=c.clientHeight;
     scene=new THREE.Scene();
     scene.background=new THREE.Color(0x080818);
-    scene.fog=new THREE.FogExp2(0x080818,0.08);
-    camera=new THREE.PerspectiveCamera(45,w/h,0.1,50);
-    // Kamera: masa boyunca bakacak açıda
-    camera.position.set(0,6,6);
-    camera.lookAt(0,0,0.5);
-    renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
-    renderer.setSize(w,h);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-    renderer.shadowMap.enabled=true;
-    c.innerHTML='';c.appendChild(renderer.domElement);
-    clock=new THREE.Clock();
+    scene.fog=new THREE.FogExp2(0x080818,0.06);
 
-    // Işıklar
-    scene.add(new THREE.AmbientLight(0x404080,0.8));
-    var dl=new THREE.DirectionalLight(0xffffff,0.7);
-    dl.position.set(2,8,4);dl.castShadow=true;scene.add(dl);
-    var pl=new THREE.PointLight(0xffdd44,0.5,12);
-    pl.position.set(0,4,0);scene.add(pl);
+    cam=new THREE.PerspectiveCamera(50,w/h,0.1,50);
+    cam.position.set(0,7,7);
+    cam.lookAt(0,0,0);
 
-    // Masa
-    var tw=2.8,tl=5;
-    var tGeo=new THREE.BoxGeometry(tw,0.08,tl);
-    var tMat=new THREE.MeshPhongMaterial({color:0x1565C0,specular:0x333333,shininess:30});
-    tableMesh=new THREE.Mesh(tGeo,tMat);
-    tableMesh.receiveShadow=true;
-    tableMesh.position.y=-0.5;scene.add(tableMesh);
+    ren=new THREE.WebGLRenderer({antialias:true});
+    ren.setSize(w,h);
+    ren.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    ren.shadowMap.enabled=true;
+    c.innerHTML='';c.appendChild(ren.domElement);
+    clk=new THREE.Clock();
 
-    // Masa bacakları
-    var legGeo=new THREE.CylinderGeometry(0.06,0.06,0.4);
-    var legMat=new THREE.MeshPhongMaterial({color:0x333333});
-    [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(p){
-        var leg=new THREE.Mesh(legGeo,legMat);
-        leg.position.set(p[0]*(tw/2-0.15),-0.74,p[1]*(tl/2-0.15));
-        scene.add(leg);
-    });
+    // Lights
+    scene.add(new THREE.AmbientLight(0x404080,0.7));
+    var dl=new THREE.DirectionalLight(0xffffff,0.8);
+    dl.position.set(3,10,5);dl.castShadow=true;scene.add(dl);
+    scene.add(new THREE.PointLight(0xffdd44,0.4,15).translateY(5));
 
-    // Masa çizgileri
-    var lineMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.4});
-    var lineH=new THREE.Mesh(new THREE.PlaneGeometry(tw-0.1,0.02),lineMat);
-    lineH.rotation.x=-Math.PI/2;lineH.position.set(0,-0.46,0);scene.add(lineH);
-    var lineV=new THREE.Mesh(new THREE.PlaneGeometry(0.02,tl-0.1),lineMat);
-    lineV.rotation.x=-Math.PI/2;lineV.position.set(0,-0.46,0);scene.add(lineV);
+    // Table
+    var tg=new THREE.BoxGeometry(tbl.w,0.08,tbl.h);
+    var tm=new THREE.MeshPhongMaterial({color:0x1565C0,specular:0x444444,shininess:30});
+    var table=new THREE.Mesh(tg,tm);table.receiveShadow=true;table.position.y=-0.5;scene.add(table);
 
-    // Masa kenarları
-    var bGeo=new THREE.BoxGeometry(tw+0.12,0.12,0.04);
-    var bMat=new THREE.MeshPhongMaterial({color:0x0D47A1});
+    // Center line
+    var ll=new THREE.Mesh(new THREE.PlaneGeometry(tbl.w-0.1,0.025),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.4}));
+    ll.rotation.x=-Math.PI/2;ll.position.y=-0.46;scene.add(ll);
+
+    // Net
+    var netG=new THREE.BoxGeometry(tbl.w-0.3,0.25,0.02);
+    var netM=new THREE.MeshPhongMaterial({color:0xffffff,transparent:true,opacity:0.6});
+    var net=new THREE.Mesh(netG,netM);net.position.y=-0.37;scene.add(net);
+
+    // Borders
+    var bG=new THREE.BoxGeometry(tbl.w+0.12,0.1,0.04);
+    var bM=new THREE.MeshPhongMaterial({color:0x0D47A1});
     [-1,1].forEach(function(s){
-        var b=new THREE.Mesh(bGeo,bMat);
-        b.position.set(0,-0.44,s*tl/2);scene.add(b);
+        var b=new THREE.Mesh(bG,bM);b.position.set(0,-0.45,s*tbl.h/2);scene.add(b);
     });
 
-    // Raketler - karakterler (göz + gülümseme)
-    pad3d=[];
+    // Paddles with characters
+    pm=[];
+    var colors=[0xFF5722,0x2196F3];
     for(var i=0;i<2;i++){
         var g=new THREE.Group();
 
-        // Gövde
-        var padG=new THREE.BoxGeometry(0.65,0.1,0.14);
-        var padM=new THREE.MeshPhongMaterial({color:i===0?0xFF5722:0x2196F3,specular:0x555555,shininess:40});
-        var pad=new THREE.Mesh(padG,padM);pad.castShadow=true;g.add(pad);
+        // Body
+        var pad=new THREE.Mesh(new THREE.BoxGeometry(0.7,0.1,0.15),new THREE.MeshPhongMaterial({color:colors[i],specular:0x555,shininess:40}));
+        pad.castShadow=true;g.add(pad);
 
-        // Kulp
-        var hGeo=new THREE.CylinderGeometry(0.03,0.02,0.18);
-        var hMat=new THREE.MeshPhongMaterial({color:0x8D6E63});
-        var handle=new THREE.Mesh(hGeo,hMat);
-        handle.rotation.x=Math.PI/2;handle.position.y=-0.14;g.add(handle);
+        // Handle
+        var h=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.015,0.2),new THREE.MeshPhongMaterial({color:0x8D6E63}));
+        h.rotation.x=Math.PI/2;h.position.y=-0.15;g.add(h);
 
-        // Sol göz
-        var eGeo=new THREE.SphereGeometry(0.035,8,8);
-        var wMat=new THREE.MeshPhongMaterial({color:0xffffff});
-        var bMat2=new THREE.MeshPhongMaterial({color:0x111111});
-        var lE=new THREE.Mesh(eGeo,wMat);lE.position.set(-0.13,0.06,0.05);g.add(lE);
-        var lP=new THREE.Mesh(new THREE.SphereGeometry(0.018,8,8),bMat2);lP.position.set(-0.13,0.06,0.07);g.add(lP);
+        // Eyes
+        var eG=new THREE.SphereGeometry(0.035,8,8);
+        var wM=new THREE.MeshPhongMaterial({color:0xffffff});
+        var bM2=new THREE.MeshPhongMaterial({color:0x111111});
+        [-1,1].forEach(function(sx){
+            var eye=new THREE.Mesh(eG,wM);eye.position.set(sx*0.14,0.06,0.05);g.add(eye);
+            var pupil=new THREE.Mesh(new THREE.SphereGeometry(0.018,8,8),bM2);pupil.position.set(sx*0.14,0.06,0.08);g.add(pupil);
+        });
 
-        // Sağ göz
-        var rE=new THREE.Mesh(eGeo,wMat);rE.position.set(0.13,0.06,0.05);g.add(rE);
-        var rP=new THREE.Mesh(new THREE.SphereGeometry(0.018,8,8),bMat2);rP.position.set(0.13,0.06,0.07);g.add(rP);
-
-        // Gülümseme
-        var smG=new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
-            new THREE.Vector3(-0.1,0,0),
-            new THREE.Vector3(-0.05,-0.03,0),
-            new THREE.Vector3(0.05,-0.03,0),
-            new THREE.Vector3(0.1,0,0)
-        ]),12,0.007,4,false);
-        var sm=new THREE.Mesh(smG,new THREE.MeshPhongMaterial({color:0x333333}));
-        sm.position.set(0,0.04,0.06);g.add(sm);
-
-        // Kaşlar
-        var bRowG=new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
-            new THREE.Vector3(-0.18,0.1,0.04),new THREE.Vector3(-0.08,0.12,0.04)
-        ]),4,0.005,4,false);
-        var brow=new THREE.Mesh(bRowG,new THREE.MeshPhongMaterial({color:0x333333}));
-        g.add(brow);
-        var brow2=brow.clone();brow2.position.x=0.26;g.add(brow2);
+        // Smile
+        var pts=[];
+        for(var j=0;j<=8;j++){var t=j/8;pts.push(new THREE.Vector3(-0.1+t*0.2,-0.02+Math.sin(t*Math.PI)*0.03,0));}
+        var sm=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),8,0.006,4,false),new THREE.MeshPhongMaterial({color:0x333333}));
+        sm.position.y=0.04;sm.position.z=0.06;g.add(sm);
 
         g.position.y=-0.38;
-        g.position.z=i===0?-tl/2+0.35:tl/2-0.35;
-        scene.add(g);
-        pad3d.push(g);
+        g.position.z=i===0?-tbl.h/2+0.4:tbl.h/2-0.4;
+        scene.add(g);pm.push(g);
     }
 
-    // Top
-    var ballGeo=new THREE.SphereGeometry(0.055,16,16);
-    var ballMat=new THREE.MeshPhongMaterial({color:0xFFFF00,emissive:0x665500,specular:0xffffff,shininess:80});
-    ball3d=new THREE.Mesh(ballGeo,ballMat);ball3d.castShadow=true;
-    ball3d.position.y=-0.38;scene.add(ball3d);
+    // Ball
+    b3=new THREE.Mesh(new THREE.SphereGeometry(0.06,16,16),new THREE.MeshPhongMaterial({color:0xFFFF00,emissive:0x665500,specular:0xffffff,shininess:80}));
+    b3.castShadow=true;b3.position.y=-0.38;scene.add(b3);
 
-    // Top gölgesi (masa üstünde)
-    var shGeo=new THREE.CircleGeometry(0.07,16);
-    var shMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.25});
-    var sh=new THREE.Mesh(shGeo,shMat);sh.rotation.x=-Math.PI/2;
-    sh.position.y=-0.45;scene.add(sh);
-    ball3d.userData.shadow=sh;
+    // Ball shadow
+    shMesh=new THREE.Mesh(new THREE.CircleGeometry(0.08,16),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.2}));
+    shMesh.rotation.x=-Math.PI/2;shMesh.position.y=-0.46;scene.add(shMesh);
 
-    ball2.x=0;ball2.y=0;ball2.vx=0;ball2.vy=0;
-    p2d[0].x=0;p2d[1].x=0;
+    b2.x=0;b2.y=0;b2.vx=0;b2.vy=0;
+    p2[0].x=0;p2[1].x=0;
 }
 
 function render3D(){
-    if(!renderer)return;
-    // Paddle pozisyonları
-    pad3d[0].position.x=p2d[0].x*0.5;
-    pad3d[1].position.x=p2d[1].x*0.5;
+    if(!ren)return;
+    pm[0].position.x=p2[0].x*0.45;
+    pm[1].position.x=p2[1].x*0.45;
+    b3.position.x=b2.x*0.45;
+    b3.position.z=b2.y*0.45;
+    b3.rotation.z+=b2.vx*0.3;
+    shMesh.position.x=b3.position.x;
+    shMesh.position.z=b3.position.z;
 
-    // Top pozisyonu
-    ball3d.position.x=ball2.x*0.5;
-    ball3d.position.z=ball2.y*0.5;
-    ball3d.rotation.z+=ball2.vx*0.3;
+    // Dynamic camera follows ball
+    var t=clk?clk.getElapsedTime():0;
+    var cx=b3.position.x*0.25;
+    var cy=6+Math.sin(t*0.4)*0.4;
+    var cz=6.5+Math.cos(t*0.3)*0.3;
+    cam.position.set(cx,cy,cz);
+    cam.lookAt(b3.position.x*0.15,-0.2,0);
 
-    // Gölge
-    if(ball3d.userData.shadow){
-        ball3d.userData.shadow.position.x=ball3d.position.x;
-        ball3d.userData.shadow.position.z=ball3d.position.z;
-    }
-
-    // Dinamik kamera - topu takip eder
-    var time=clock?clock.getElapsedTime():0;
-    var camX=ball3d.position.x*0.3;
-    var camY=5.5+Math.sin(time*0.5)*0.3;
-    var camZ=5.5+Math.cos(time*0.3)*0.2;
-    camera.position.set(camX,camY,camZ);
-    camera.lookAt(ball3d.position.x*0.2, -0.2, 0);
-
-    renderer.render(scene,camera);
+    ren.render(scene,cam);
 }
 
-// ─── 2D ───
+// 2D
 function init2D(){
-    var c=document.getElementById('gameContainer');
+    var c=document.getElementById('gc');
     c.innerHTML='';
-    canvas=document.createElement('canvas');
-    ctx=canvas.getContext('2d');
-    c.appendChild(canvas);
+    c2=document.createElement('canvas');cx2=c2.getContext('2d');
+    c.appendChild(c2);
     W2=c.clientWidth;H2=c.clientHeight;
-    canvas.width=W2;canvas.height=H2;
-    pw2=W2*0.2;ph2=H2*0.02;br2=Math.min(10,W2*0.025);
-    ball2.x=0;ball2.y=0;ball2.vx=0;ball2.vy=0;
-    p2d[0].x=0;p2d[1].x=0;
+    c2.width=W2;c2.height=H2;
+    pw2=W2*0.18;ph2=10;br2=Math.min(10,W2*0.025);
+    b2.x=0;b2.y=0;b2.vx=0;b2.vy=0;
+    p2[0].x=0;p2[1].x=0;
 }
 
 function render2D(){
-    if(!ctx)return;
-    ctx.fillStyle='#0a1628';ctx.fillRect(0,0,W2,H2);
+    if(!cx2)return;
+    cx2.fillStyle='#0a1628';cx2.fillRect(0,0,W2,H2);
     var mx=W2/2,my=H2/2;
-    // Masa
-    ctx.fillStyle='#1565C0';ctx.fillRect(20,30,W2-40,H2-60);
-    ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=2;
-    ctx.setLineDash([6,4]);ctx.beginPath();ctx.moveTo(20,my);ctx.lineTo(W2-20,my);ctx.stroke();
-    ctx.setLineDash([]);
-    // Paddle'lar
-    ctx.fillStyle='#FF5722';
-    ctx.beginPath();ctx.roundRect(mx+p2d[0].x-pw2/2,H2-40,pw2,ph2,4);ctx.fill();
-    ctx.fillStyle='#2196F3';
-    ctx.beginPath();ctx.roundRect(mx+p2d[1].x-pw2/2,35,pw2,ph2,4);ctx.fill();
-    // Top
-    ctx.fillStyle='#FFD700';ctx.beginPath();
-    ctx.arc(mx+ball2.x,my+ball2.y,br2,0,Math.PI*2);ctx.fill();
+    // Table
+    cx2.fillStyle='#1565C0';cx2.fillRect(15,25,W2-30,H2-50);
+    cx2.strokeStyle='rgba(255,255,255,0.3)';cx2.lineWidth=2;cx2.setLineDash([6,4]);
+    cx2.beginPath();cx2.moveTo(15,my);cx2.lineTo(W2-15,my);cx2.stroke();cx2.setLineDash([]);
+
+    // Center line vertical
+    cx2.strokeStyle='rgba(255,255,255,0.2)';cx2.lineWidth=2;
+    cx2.beginPath();cx2.moveTo(mx,25);cx2.lineTo(mx,H2-25);cx2.stroke();
+
+    // Paddles
+    cx2.fillStyle='#FF5722';
+    cx2.beginPath();cx2.roundRect(mx+p2[0].x-pw2/2,H2-38,pw2,ph2,5);cx2.fill();
+    cx2.fillStyle='#2196F3';
+    cx2.beginPath();cx2.roundRect(mx+p2[1].x-pw2/2,33,pw2,ph2,5);cx2.fill();
+
+    // Ball
+    cx2.fillStyle='#FFD700';cx2.beginPath();
+    cx2.arc(mx+b2.x,my+b2.y,br2,0,Math.PI*2);cx2.fill();
+    cx2.fillStyle='#FFF8';cx2.beginPath();
+    cx2.arc(mx+b2.x-2,my+b2.y-2,br2*0.3,0,Math.PI*2);cx2.fill();
 }
 
-// ─── Game Logic ───
-var tw3=2.8,tl3=5;
+// Physics
+function update(){
+    if(serv)return;
+    var bMax=vm==='3'?tbl.w/2-0.35:W2/2-br2-15;
 
-function updatePhysics(){
-    if(serving)return;
-    var lx=viewMode==='3d'?tw3/2-0.4:W2/2-20;
-    var lz=viewMode==='3d'?tl3/2:0;
-    var bMax=viewMode==='3d'?tw3/2-0.3:W2/2-br2-20;
+    b2.x+=b2.vx;b2.y+=b2.vy;
 
-    ball2.x+=ball2.vx;
-    ball2.y+=ball2.vy;
+    // Wall bounce
+    if(Math.abs(b2.x)>bMax){b2.vx*=-1;b2.x=Math.sign(b2.x)*bMax;}
 
-    // Yan duvar çarpışma
-    if(Math.abs(ball2.x)>bMax){ball2.vx*=-1;ball2.x=Math.sign(ball2.x)*bMax;}
-
-    // Paddle çarpışma
-    var pw=viewMode==='3d'?0.65:pw2;
-    if(viewMode==='3d'){
-        // 3D modunda
-        var p1z=-tl3/2+0.35;
-        if(ball2.vy<0 && ball2.y<=p1z+0.2 && ball2.y>=p1z-0.1 && Math.abs(ball2.x*0.5-p2d[0].x*0.5)<pw/2){
-            ball2.vy*=-1.08;ball2.y=p1z+0.2;
-            ball2.vx+=(ball2.x*0.5-p2d[0].x*0.5)*0.3;
+    // Paddle collisions
+    if(vm==='3'){
+        var p1z=-tbl.h/2+0.4,p2z=tbl.h/2-0.4;
+        if(b2.vy<0&&b2.y<=p1z+0.15&&b2.y>=p1z-0.1&&Math.abs(b2.x*0.45-p2[0].x*0.45)<0.4){
+            b2.vy=-Math.abs(b2.vy)*1.08;b2.y=p1z+0.16;
+            b2.vx+=(b2.x*0.45-p2[0].x*0.45)*0.3;
         }
-        var p2z=tl3/2-0.35;
-        if(ball2.vy>0 && ball2.y>=p2z-0.2 && ball2.y<=p2z+0.1 && Math.abs(ball2.x*0.5-p2d[1].x*0.5)<pw/2){
-            ball2.vy*=-1.08;ball2.y=p2z-0.2;
-            ball2.vx+=(ball2.x*0.5-p2d[1].x*0.5)*0.3;
+        if(b2.vy>0&&b2.y>=p2z-0.15&&b2.y<=p2z+0.1&&Math.abs(b2.x*0.45-p2[1].x*0.45)<0.4){
+            b2.vy=Math.abs(b2.vy)*1.08;b2.y=p2z-0.16;
+            b2.vx+=(b2.x*0.45-p2[1].x*0.45)*0.3;
         }
     }else{
-        var ph=H2-40;
-        if(ball2.vy<0 && ball2.y<=-(H2/2-40)+ph2 && ball2.y>=-(H2/2-40) && Math.abs(ball2.x)<pw2/2+br2){
-            ball2.vy*=-1.08;ball2.y=-(H2/2-40)+ph2+1;
-            ball2.vx+=(ball2.x-p2d[0].x)*0.02;
+        if(b2.vy<0&&b2.y<=-(H2/2-38)+ph2&&b2.y>=-(H2/2-38)&&Math.abs(b2.x)<pw2/2+br2){
+            b2.vy=Math.abs(b2.vy)*1.08;b2.y=-(H2/2-38)+ph2+1;
+            b2.vx+=(b2.x-p2[0].x)*0.015;
         }
-        if(ball2.vy>0 && ball2.y>=(H2/2-40)-ph2 && ball2.y<=(H2/2-40) && Math.abs(ball2.x)<pw2/2+br2){
-            ball2.vy*=-1.08;ball2.y=(H2/2-40)-ph2-1;
-            ball2.vx+=(ball2.x-p2d[1].x)*0.02;
+        if(b2.vy>0&&b2.y>=(H2/2-38)-ph2&&b2.y<=(H2/2-38)&&Math.abs(b2.x)<pw2/2+br2){
+            b2.vy=-Math.abs(b2.vy)*1.08;b2.y=(H2/2-38)-ph2-1;
+            b2.vx+=(b2.x-p2[1].x)*0.015;
         }
     }
 
-    // Hız sınırlaması
-    ball2.vx=Math.max(-3,Math.min(3,ball2.vx));
-    ball2.vy=Math.max(-0.2,Math.min(0.2,ball2.vy));
+    b2.vx=Math.max(-2.5,Math.min(2.5,b2.vx));
+    b2.vy=Math.max(-0.18,Math.min(0.18,b2.vy));
 
-    // Skor
-    if(viewMode==='3d'){
-        if(ball2.y>tl3/2+0.5)scorePoint(0);
-        if(ball2.y<-tl3/2-0.5)scorePoint(1);
+    if(vm==='3'){
+        if(b2.y>tbl.h/2+0.8)scoreP(0);
+        if(b2.y<-tbl.h/2-0.8)scoreP(1);
     }else{
-        if(ball2.y>H2/2)scorePoint(0);
-        if(ball2.y<-H2/2)scorePoint(1);
+        if(b2.y>H2/2+10)scoreP(0);
+        if(b2.y<-H2/2-10)scoreP(1);
     }
 }
 
-function scorePoint(player){
-    score[player]++;updateScoreUI();
-    serving=true;servingPlayer=1-player;
-    ball2.x=0;ball2.y=0;ball2.vx=0;ball2.vy=0;
-    p2d[0].x=0;p2d[1].x=0;
-    updateStatus(servingPlayer===0?'Sen servis yap!':'AI servis yapıyor...');
-    if(score[player]>=WIN){
-        document.getElementById('winText').textContent=(player===0?'Sen':'AI')+' Kazandı! 🏆';
-        document.getElementById('overlay').classList.add('show');
-        return;
+function scoreP(p){
+    sc[p]++;updSc();
+    serv=true;sP=1-p;
+    b2.x=0;b2.y=0;b2.vx=0;b2.vy=0;
+    p2[0].x=0;p2[1].x=0;
+    updSt(sP===0?'Sen serve at!':'AI serve atıyor...');
+    if(sc[p]>=WN){
+        document.getElementById('wT').textContent=(p===0?'Sen':'AI')+' Kazandı! 🏆';
+        document.getElementById('ov').classList.add('show');return;
     }
-    if(gameMode==='ai'&&servingPlayer===1)setTimeout(serveBall,1000);
+    if(gm==='ai'&&sP===1)setTimeout(srv,1200);
 }
 
-function serveBall(){
-    if(!serving)return;
-    var dir=servingPlayer===0?1:-1;
-    ball2.x=(Math.random()-0.5)*0.5;
-    ball2.y=0;
-    ball2.vx=(Math.random()-0.5)*0.5;
-    ball2.vy=dir*0.1;
-    serving=false;
+function srv(){
+    if(!serv)return;
+    var dir=sP===0?-1:1;
+    b2.x=(Math.random()-0.5)*0.3;
+    b2.y=0;
+    b2.vx=(Math.random()-0.5)*0.4;
+    b2.vy=dir*0.1;
+    serv=false;
 }
 
-function updateScoreUI(){
-    document.getElementById('s1').textContent='Sen '+score[0];
-    document.getElementById('s2').textContent='AI '+score[1];
-    document.getElementById('s1').classList.toggle('active',servingPlayer===0||(!serving&&true));
-    document.getElementById('s2').classList.toggle('active',servingPlayer===1);
+function updSc(){
+    document.getElementById('s1').textContent='Sen '+sc[0];
+    document.getElementById('s2').textContent='AI '+sc[1];
+    document.getElementById('s1').classList.toggle('a',sP===0);
+    document.getElementById('s2').classList.toggle('a',sP===1);
 }
-function updateStatus(m){document.getElementById('status').textContent=m;}
+function updSt(m){document.getElementById('st').textContent=m;}
 
-// ─── AI ───
-function aiMove(){
-    if(gameMode!=='ai'||serving)return;
-    var target=ball2.x*0.7;
-    var diff=target-p2d[1].x;
-    p2d[1].x+=Math.max(-0.08,Math.min(0.08,diff));
+// AI
+function aiM(){
+    if(gm!=='ai'||serv)return;
+    var tgt=b2.x*0.75;
+    var d=tgt-p2[1].x;
+    p2[1].x+=Math.max(-0.07,Math.min(0.07,d));
 }
 
-// ─── Input ───
-function setupInput(){
-    var bL=document.getElementById('btnL'),bR=document.getElementById('btnR'),bS=document.getElementById('btnS');
-
-    bL.addEventListener('touchstart',function(e){e.preventDefault();touchL=true;});
-    bL.addEventListener('touchend',function(e){e.preventDefault();touchL=false;});
-    bL.addEventListener('mousedown',function(){touchL=true;});
-    bL.addEventListener('mouseup',function(){touchL=false;});
-
-    bR.addEventListener('touchstart',function(e){e.preventDefault();touchR=true;});
-    bR.addEventListener('touchend',function(e){e.preventDefault();touchR=false;});
-    bR.addEventListener('mousedown',function(){touchR=true;});
-    bR.addEventListener('mouseup',function(){touchR=false;});
-
-    bS.addEventListener('click',serveBall);
-    document.getElementById('btnAgain').addEventListener('click',resetGame);
-
-    document.addEventListener('keydown',function(e){keys[e.key]=true;});
-    document.addEventListener('keyup',function(e){keys[e.key]=false;});
+// Input
+function setupIn(){
+    var bL=document.getElementById('bL'),bR=document.getElementById('bR');
+    bL.addEventListener('touchstart',function(e){e.preventDefault();tL=true;},{passive:false});
+    bL.addEventListener('touchend',function(e){e.preventDefault();tL=false;},{passive:false});
+    bL.addEventListener('mousedown',function(){tL=true;});
+    document.addEventListener('mouseup',function(){tL=false;});
+    bR.addEventListener('touchstart',function(e){e.preventDefault();tR=true;},{passive:false});
+    bR.addEventListener('touchend',function(e){e.preventDefault();tR=false;},{passive:false});
+    bR.addEventListener('mousedown',function(){tR=true;});
+    document.addEventListener('mouseup',function(){tR=false;});
+    document.getElementById('bS').addEventListener('click',function(){srv();});
+    document.getElementById('bAg').addEventListener('click',reset);
+    document.addEventListener('keydown',function(e){k[e.key]=true;});
+    document.addEventListener('keyup',function(e){k[e.key]=false;});
 
     // Swipe
     var sx=0;
-    var gc=document.getElementById('gameContainer');
+    var gc=document.getElementById('gc');
     gc.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;e.preventDefault();},{passive:false});
     gc.addEventListener('touchmove',function(e){
         e.preventDefault();
         var dx=e.touches[0].clientX-sx;
-        var max=viewMode==='3d'?1.4:W2/2-pw2/2;
-        p2d[0].x=Math.max(-max,Math.min(max,p2d[0].x+dx*0.015));
+        var mx=vm==='3'?1.5:W2/2-pw2/2;
+        p2[0].x=Math.max(-mx,Math.min(mx,p2[0].x+dx*0.012));
         sx=e.touches[0].clientX;
     },{passive:false});
 }
 
-function processInput(){
-    var sp=viewMode==='3d'?0.06:4;
-    var mx=viewMode==='3d'?1.4:W2/2-pw2/2;
-    if(touchL||keys['ArrowLeft']||keys['a'])p2d[0].x=Math.max(-mx,p2d[0].x-sp);
-    if(touchR||keys['ArrowRight']||keys['d'])p2d[0].x=Math.min(mx,p2d[0].x+sp);
-    aiMove();
+function procIn(){
+    var sp=vm==='3'?0.06:4;
+    var mx=vm==='3'?1.5:W2/2-pw2/2;
+    if(tL||k['ArrowLeft']||k['a'])p2[0].x=Math.max(-mx,p2[0].x-sp);
+    if(tR||k['ArrowRight']||k['d'])p2[0].x=Math.min(mx,p2[0].x+sp);
+    aiM();
 }
 
-// ─── Main Loop ───
 function mainLoop(){
     requestAnimationFrame(mainLoop);
-    processInput();
-    updatePhysics();
-    if(viewMode==='3d')render3D();else render2D();
+    procIn();update();
+    if(vm==='3')render3D();else render2D();
 }
 
-function resetGame(){
-    score=[0,0];serving=true;servingPlayer=0;
-    ball2.x=0;ball2.y=0;ball2.vx=0;ball2.vy=0;
-    p2d[0].x=0;p2d[1].x=0;
-    updateScoreUI();updateStatus('Sen servis yap!');
-    document.getElementById('overlay').classList.remove('show');
-    if(gameMode==='ai'&&servingPlayer===1)setTimeout(serveBall,1000);
+function reset(){
+    sc=[0,0];serv=true;sP=0;
+    b2.x=0;b2.y=0;b2.vx=0;b2.vy=0;
+    p2[0].x=0;p2[1].x=0;
+    updSc();updSt('Sen serve at!');
+    document.getElementById('ov').classList.remove('show');
 }
 
-function switchView(mode){
-    viewMode=mode;
-    document.getElementById('v2d').classList.toggle('active',mode==='2d');
-    document.getElementById('v2d').classList.toggle('v-active',mode==='2d');
-    document.getElementById('v3d').classList.toggle('active',mode==='3d');
-    document.getElementById('v3d').classList.toggle('v-active',mode==='3d');
-    ball2.x=0;ball2.y=0;ball2.vx=0;ball2.vy=0;p2d[0].x=0;p2d[1].x=0;
-    serving=true;
-    if(mode==='3d')init3D();else init2D();
+function switchV(m){
+    vm=m;
+    document.getElementById('v2d').classList.toggle('a',m==='2d');
+    document.getElementById('v2d').classList.toggle('v',m==='2d');
+    document.getElementById('v3d').classList.toggle('a',m==='3d');
+    document.getElementById('v3d').classList.toggle('v',m==='3d');
+    b2.x=0;b2.y=0;b2.vx=0;b2.vy=0;p2[0].x=0;p2[1].x=0;serv=true;
+    if(m==='3')init3D();else init2D();
 }
 
-// ─── Events ───
-document.getElementById('v2d').addEventListener('click',function(){switchView('2d');});
-document.getElementById('v3d').addEventListener('click',function(){switchView('3d');});
-document.getElementById('mAi').addEventListener('click',function(){gameMode='ai';document.getElementById('mAi').classList.add('active');document.getElementById('m2p').classList.remove('active');resetGame();});
-document.getElementById('m2p').addEventListener('click',function(){gameMode='2p';document.getElementById('m2p').classList.add('active');document.getElementById('mAi').classList.remove('active');resetGame();});
+document.getElementById('v2d').addEventListener('click',function(){switchV('2d');});
+document.getElementById('v3d').addEventListener('click',function(){switchV('3d');});
+document.getElementById('mAi').addEventListener('click',function(){gm='ai';document.getElementById('mAi').classList.add('a');document.getElementById('m2p').classList.remove('a');reset();});
+document.getElementById('m2p').addEventListener('click',function(){gm='2p';document.getElementById('m2p').classList.add('a');document.getElementById('mAi').classList.remove('a');reset();});
 
-setupInput();
-init3D();
-clock=new THREE.Clock();
-mainLoop();
+setupIn();init3D();
 })();
 </script>
 </body>
