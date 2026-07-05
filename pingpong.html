@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🏓 Ping Pong King</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', sans-serif;
+            color: white;
+            overflow: hidden;
+            touch-action: none;
+        }
+        h1 { font-size: 26px; margin-bottom: 8px; text-shadow: 0 0 20px rgba(0,200,255,0.5); }
+        .score-board {
+            display: flex; gap: 50px; margin-bottom: 10px; font-size: 22px; font-weight: bold;
+        }
+        .score-board .p1 { color: #00d4ff; }
+        .score-board .p2 { color: #ff4081; }
+        #gameCanvas {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 12px;
+            background: #1a1a2e;
+            box-shadow: 0 0 40px rgba(0,200,255,0.2);
+            touch-action: none;
+        }
+        .controls {
+            margin-top: 12px;
+            display: flex; gap: 15px;
+        }
+        .ctrl-btn {
+            width: 70px; height: 70px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            color: white; font-size: 28px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            user-select: none;
+            transition: background 0.1s;
+        }
+        .ctrl-btn:active { background: rgba(255,255,255,0.3); }
+        .status {
+            margin-top: 10px; font-size: 16px;
+            padding: 8px 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+        }
+        .btn {
+            margin-top: 12px; padding: 10px 30px;
+            font-size: 16px; border: none; border-radius: 20px;
+            background: linear-gradient(145deg, #00d4ff, #0088cc);
+            color: #1a1a2e; cursor: pointer; font-weight: bold;
+        }
+        .mode-select {
+            display: flex; gap: 10px; margin-bottom: 15px;
+        }
+        .mode-btn {
+            padding: 10px 20px; border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 15px; background: rgba(255,255,255,0.1);
+            color: white; cursor: pointer; font-size: 14px;
+        }
+        .mode-btn.active { border-color: #00d4ff; background: rgba(0,212,255,0.2); }
+        .overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85); z-index: 100;
+            align-items: center; justify-content: center; flex-direction: column;
+        }
+        .overlay.show { display: flex; }
+        .overlay h2 { font-size: 32px; margin-bottom: 15px; text-shadow: 0 0 30px gold; }
+        .overlay p { font-size: 18px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🏓 Ping Pong King</h1>
+    <div class="score-board">
+        <span class="p1" id="s1">0</span>
+        <span style="opacity:0.4">-</span>
+        <span class="p2" id="s2">0</span>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <div class="controls" id="controls">
+        <button class="ctrl-btn" id="btnUp">▲</button>
+        <button class="ctrl-btn" id="btnDown">▼</button>
+    </div>
+    <div class="status" id="status">🎮 Başlamak için tıkla!</div>
+    <div class="mode-select">
+        <button class="mode-btn active" onclick="setMode('ai')">🤖 vs AI</button>
+        <button class="mode-btn" onclick="setMode('2p')">👥 2 Kişilik</button>
+    </div>
+    <button class="btn" onclick="startGame()">🔄 Yeni Oyun</button>
+
+    <div class="overlay" id="overlay">
+        <h2 id="winText"></h2>
+        <p id="winSub"></p>
+        <button class="btn" onclick="startGame(); document.getElementById('overlay').classList.remove('show');">🔄 Tekrar Oyna</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const WIN_SCORE = 5;
+
+        // Boyut ayarı
+        function resize() {
+            const w = Math.min(window.innerWidth - 20, 400);
+            const h = w * 0.7;
+            canvas.width = w;
+            canvas.height = h;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        let mode = 'ai'; // 'ai' veya '2p'
+        let gameRunning = false;
+        let score = [0, 0];
+        let animFrame;
+
+        // Oyun nesneleri
+        let ball, paddle1, paddle2;
+        let keys = {};
+        let touchDir = 0;
+
+        function initObjects() {
+            const W = canvas.width, H = canvas.height;
+            ball = { x: W/2, y: H/2, vx: W*0.012, vy: H*0.008, r: 6, speed: W*0.012 };
+            paddle1 = { x: 10, y: H/2 - H*0.1, w: 8, h: H*0.2, score: 0 };
+            paddle2 = { x: W - 18, y: H/2 - H*0.1, w: 8, h: H*0.2, score: 0 };
+        }
+
+        function setMode(m) {
+            mode = m;
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            startGame();
+        }
+
+        function startGame() {
+            score = [0, 0];
+            document.getElementById('s1').textContent = '0';
+            document.getElementById('s2').textContent = '0';
+            document.getElementById('overlay').classList.remove('show');
+            document.getElementById('status').textContent = '🏓 Oyun başladı!';
+            initObjects();
+            gameRunning = true;
+            if (animFrame) cancelAnimationFrame(animFrame);
+            gameLoop();
+        }
+
+        function resetBall() {
+            const W = canvas.width, H = canvas.height;
+            ball.x = W/2;
+            ball.y = H/2;
+            const angle = (Math.random() - 0.5) * Math.PI / 3;
+            const dir = Math.random() > 0.5 ? 1 : -1;
+            ball.vx = Math.cos(angle) * ball.speed * dir;
+            ball.vy = Math.sin(angle) * ball.speed;
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+            update();
+            draw();
+            animFrame = requestAnimationFrame(gameLoop);
+        }
+
+        function update() {
+            const W = canvas.width, H = canvas.height;
+
+            // Top hareketi
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+
+            // Üst-alt duvar çarpması
+            if (ball.y - ball.r <= 0) { ball.y = ball.r; ball.vy = Math.abs(ball.vy); }
+            if (ball.y + ball.r >= H) { ball.y = H - ball.r; ball.vy = -Math.abs(ball.vy); }
+
+            // Paddle 1 (sol) çarpışma
+            if (ball.x - ball.r <= paddle1.x + paddle1.w &&
+                ball.y >= paddle1.y && ball.y <= paddle1.y + paddle1.h &&
+                ball.vx < 0) {
+                ball.vx = Math.abs(ball.vx) * 1.03;
+                const hitPos = (ball.y - paddle1.y) / paddle1.h - 0.5;
+                ball.vy = hitPos * H * 0.015;
+                ball.x = paddle1.x + paddle1.w + ball.r;
+            }
+
+            // Paddle 2 (sağ) çarpışma
+            if (ball.x + ball.r >= paddle2.x &&
+                ball.y >= paddle2.y && ball.y <= paddle2.y + paddle2.h &&
+                ball.vx > 0) {
+                ball.vx = -Math.abs(ball.vx) * 1.03;
+                const hitPos = (ball.y - paddle2.y) / paddle2.h - 0.5;
+                ball.vy = hitPos * H * 0.015;
+                ball.x = paddle2.x - ball.r;
+            }
+
+            // Gol kontrolü
+            if (ball.x < 0) {
+                score[1]++;
+                document.getElementById('s2').textContent = score[1];
+                checkWin();
+                resetBall();
+            }
+            if (ball.x > W) {
+                score[0]++;
+                document.getElementById('s1').textContent = score[0];
+                checkWin();
+                resetBall();
+            }
+
+            // Paddle 1 kontrolü (klavye + dokunmatik)
+            if (keys['ArrowUp'] || keys['w'] || touchDir === -1) {
+                paddle1.y = Math.max(0, paddle1.y - H * 0.02);
+            }
+            if (keys['ArrowDown'] || keys['s'] || touchDir === 1) {
+                paddle1.y = Math.min(H - paddle1.h, paddle1.y + H * 0.02);
+            }
+
+            // Paddle 2 kontrolü
+            if (mode === '2p') {
+                if (keys['ArrowUp']) {
+                    // 2. oyuncu için ayrı tuşlar
+                }
+                if (keys['ArrowDown']) {
+                    // 2. oyuncu için ayrı tuşlar
+                }
+            } else {
+                // AI kontrolü
+                const target = ball.y - paddle2.h / 2;
+                const diff = target - paddle2.y;
+                const speed = H * 0.018;
+                // Top bize doğru geliyorsa takip et
+                if (ball.vx > 0) {
+                    paddle2.y += diff * 0.08;
+                } else {
+                    // Orta noktaya dön
+                    const center = H / 2 - paddle2.h / 2;
+                    paddle2.y += (center - paddle2.y) * 0.03;
+                }
+                paddle2.y = Math.max(0, Math.min(H - paddle2.h, paddle2.y));
+            }
+        }
+
+        function checkWin() {
+            if (score[0] >= WIN_SCORE) {
+                gameRunning = false;
+                document.getElementById('winText').textContent = '🏆 Sol Oyuncu Kazandı!';
+                document.getElementById('winSub').textContent = `${score[0]} - ${score[1]}`;
+                document.getElementById('overlay').classList.add('show');
+                document.getElementById('status').textContent = '🎉 Oyun bitti!';
+            }
+            if (score[1] >= WIN_SCORE) {
+                gameRunning = false;
+                const winner = mode === 'ai' ? '🤖 AI' : 'Sağ Oyuncu';
+                document.getElementById('winText').textContent = `🏆 ${winner} Kazandı!`;
+                document.getElementById('winSub').textContent = `${score[0]} - ${score[1]}`;
+                document.getElementById('overlay').classList.add('show');
+                document.getElementById('status').textContent = '🎉 Oyun bitti!';
+            }
+        }
+
+        function draw() {
+            const W = canvas.width, H = canvas.height;
+
+            // Arka plan
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, W, H);
+
+            // Orta çizgi
+            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(W/2, 0);
+            ctx.lineTo(W/2, H);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Paddle'lar
+            ctx.shadowColor = '#00d4ff';
+            ctx.shadowBlur = 15;
+            ctx.fillStyle = '#00d4ff';
+            ctx.fillRect(paddle1.x, paddle1.y, paddle1.w, paddle1.h);
+
+            ctx.shadowColor = '#ff4081';
+            ctx.fillStyle = '#ff4081';
+            ctx.fillRect(paddle2.x, paddle2.y, paddle2.w, paddle2.h);
+            ctx.shadowBlur = 0;
+
+            // Top
+            ctx.shadowColor = '#ffffff';
+            ctx.shadowBlur = 20;
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+
+        // Klavye
+        document.addEventListener('keydown', e => { keys[e.key] = true; e.preventDefault(); });
+        document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+        // Dokunmatik butonlar
+        const btnUp = document.getElementById('btnUp');
+        const btnDown = document.getElementById('btnDown');
+
+        btnUp.addEventListener('touchstart', e => { e.preventDefault(); touchDir = -1; });
+        btnUp.addEventListener('touchend', e => { touchDir = 0; });
+        btnDown.addEventListener('touchstart', e => { e.preventDefault(); touchDir = 1; });
+        btnDown.addEventListener('touchend', e => { touchDir = 0; });
+
+        // Canvas üzerinde dokunmatik swipe
+        let touchStartY = 0;
+        canvas.addEventListener('touchstart', e => {
+            e.preventDefault();
+            touchStartY = e.touches[0].clientY;
+            if (!gameRunning) startGame();
+        });
+        canvas.addEventListener('touchmove', e => {
+            e.preventDefault();
+            const H = canvas.height;
+            const rect = canvas.getBoundingClientRect();
+            const touchY = e.touches[0].clientY - rect.top;
+            paddle1.y = Math.max(0, Math.min(H - paddle1.h, touchY - paddle1.h / 2));
+        });
+
+        // Fare ile paddle kontrolü
+        canvas.addEventListener('mousemove', e => {
+            if (mode === '2p') {
+                const rect = canvas.getBoundingClientRect();
+                paddle1.y = Math.max(0, Math.min(canvas.height - paddle1.h, e.clientY - rect.top - paddle1.h / 2));
+            }
+        });
+
+        canvas.addEventListener('click', () => { if (!gameRunning) startGame(); });
+
+        // İlk draw
+        initObjects();
+        draw();
+        document.getElementById('status').textContent = '🎮 Başlamak için tıkla!';
+    </script>
+</body>
+</html>
