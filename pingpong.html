@@ -31,8 +31,6 @@ body{display:flex;flex-direction:column}
 </head>
 <body>
 <div id="hdr">
-  <button class="on" id="t2d">2D</button>
-  <button id="t3d">3D (yakında)</button>
   <button class="on" id="mAi">🤖 AI</button>
   <button id="m2p">👥 2 Kişilik</button>
 </div>
@@ -295,9 +293,6 @@ document.addEventListener('keyup',function(e){
 document.getElementById('mAi').onclick=function(){G.ai=true;this.classList.add('on');document.getElementById('m2p').classList.remove('on');resetGame();};
 document.getElementById('m2p').onclick=function(){G.ai=false;this.classList.add('on');document.getElementById('mAi').classList.remove('on');resetGame();};
 document.getElementById('bR2').onclick=resetGame;
-document.getElementById('t2d').onclick=function(){};
-document.getElementById('t3d').onclick=function(){setMsg('3D modu yakında eklenecek!');};
-
 window.onresize=resize;
 
 // START
