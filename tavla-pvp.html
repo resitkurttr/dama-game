@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>🎲 Tavla PvP</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#1a0e08;font-family:sans-serif;color:#fff}
+body{display:flex;flex-direction:column}
+#hdr{display:flex;justify-content:center;gap:4px;padding:5px;background:#111;flex-shrink:0}
+#hdr button{padding:4px 10px;border:none;border-radius:8px;font-size:11px;cursor:pointer;background:#222;color:#aaa}
+#hdr button.on{background:#FFD700;color:#000}
+#info{display:flex;justify-content:space-between;padding:3px 10px;font-size:11px;background:#111;flex-shrink:0}
+#info .on{color:#FFD700;font-weight:bold}
+#game{flex:1;position:relative;overflow:hidden;min-height:0}
+#game canvas{display:block;width:100%;height:100%}
+#ctl{display:flex;justify-content:center;gap:6px;padding:6px;background:#111;flex-shrink:0}
+#ctl button{padding:6px 14px;border:none;border-radius:8px;font-size:12px;cursor:pointer}
+#ctl .g{background:#4CAF50;color:#fff}
+#ctl .r{background:#e53935;color:#fff}
+#ctl .y{background:#FFC107;color:#000}
+#ctl .y.waiting{background:#FF9800}
+#dice{display:flex;justify-content:center;gap:8px;padding:4px;flex-shrink:0;background:#111}
+.die{width:36px;height:36px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;color:#333}
+.die.off{opacity:.3}
+#msg{text-align:center;padding:2px;font-size:11px;color:#888;background:#0a0a0a;flex-shrink:0}
+.win{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:50;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.win.show{display:flex}
+.win h2{font-size:20px}
+.win button{padding:10px 20px;border:none;border-radius:10px;background:#4CAF50;color:#fff;font-size:14px;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="hdr">
+  <button class="on" id="mAi">🤖 AI</button>
+  <button id="mPvP">🌐 PvP Online</button>
+</div>
+<div id="info"><span id="n1" class="on">⚫ Sen (0)</span><span id="n2">⚪ Rakip (0)</span></div>
+<div id="game"></div>
+<div id="dice"><div class="die" id="d1">?</div><div class="die" id="d2">?</div></div>
+<div id="msg">🎲 Zar at!</div>
+<div id="ctl">
+  <button class="y" id="bRoll">🎲 Zar At</button>
+  <button class="g" id="bPass">⏭️ Pas</button>
+  <button class="r" id="bNew">🔄 Yeni</button>
+</div>
+<div class="win" id="win"><h2 id="wT"></h2><button id="bR">🔄 Tekrar</button></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
+<script src="supabase-integration.js"></script>
+<script>
+// ═══════════════════════════════════════
+//  TAVLA PvP — Canvas Backgammon + Supabase Realtime
+// ═══════════════════════════════════════
+var G={
+  cvs:null, cx:null, W:0, H:0,
+  pts:[], cur:0, dice:[0,0], used:[false,false], sel:-1, rolled:false,
+  mode:'ai', aiTurn:false, borne:[0,0],
+  // PvP state
+  pvp:false, gameId:null, myPlayerNum:null, opponentId:null,
+  myColor:0, // 0=white(bottom), 1=black(top)
+  connected:false, syncPending:false
+};
+
+function init(){
+  setupCanvas();
+  resetGame();
+  bindUI();
+  initSupabase();
+}
+
+function resetGame(){
+  G.pts=[];
+  for(var i=0;i<26;i++){ G.pts.push(0); G.pts.push(0); }
+  setP(0,24,2); setP(0,13,5); setP(0,8,3); setP(0,6,5);
+  setP(1,1,2); setP(1,12,5); setP(1,17,3); setP(1,19,5);
+  G.cur=Math.random()>0.5?1:0;
+  G.dice=[0,0]; G.used=[false,false]; G.sel=-1; G.rolled=false;
+  G.borne=[0,0]; G.aiTurn=false;
+  updDice(); updInfo();
+  setMsg('🎲 Zar at!');
+  document.getElementById('win').classList.remove('show');
+  if(G.cur===1 && G.mode==='ai') setTimeout(aiRoll,500);
+  draw();
+}
+
+function setP(p,i,v){ G.pts[p*26+i]=v; }
+function getP(p,i){ return G.pts[p*26+i]; }
+
+function setupCanvas(){
+  var box=document.getElementById('game');
+  if(G.cvs) box.removeChild(G.cvs);
+  G.cvs=document.createElement('canvas');
+  box.appendChild(G.cvs);
+  G.cx=G.cvs.getContext('2d');
+  G.W=box.clientWidth; G.H=box.clientHeight;
+  G.cvs.width=G.W; G.cvs.height=G.H;
+}
+
+function draw(){
+  var cx=G.cx, W=G.W, H=G.H;
+  cx.fillStyle='#3d2817'; cx.fillRect(0,0,W,H);
+  cx.fillStyle='#654321'; cx.fillRect(2,2,W-4,H-4);
+  cx.fillStyle='#4a3525'; cx.fillRect(W/2-6,2,12,H-4);
+  
+  var boardL=6, boardR=W-6, boardT=6, boardB=H-6;
+  var midX=W/2;
+  var ptW=(midX-12)/6;
+  var topH=(boardB-boardT)/2-4;
+  
+  // 24 triangles
+  for(var i=1;i<=24;i++){
+    var tx = i<=12 ? boardR-(i-1)*ptW : boardL+(i-13)*ptW;
+    var isTop = i>=13;
+    cx.fillStyle = (i%2===0) ? '#c0392b' : '#ecf0f1';
+    cx.beginPath();
+    if(isTop){
+      cx.moveTo(tx,boardT);
+      cx.lineTo(tx+ptW/2,boardT+topH);
+      cx.lineTo(tx-ptW/2,boardT+topH);
+    }else{
+      cx.moveTo(tx,boardB);
+      cx.lineTo(tx+ptW/2,boardB-topH);
+      cx.lineTo(tx-ptW/2,boardB-topH);
+    }
+    cx.closePath(); cx.fill();
+    cx.fillStyle='rgba(255,255,255,0.25)';
+    cx.font='7px sans-serif'; cx.textAlign='center';
+    cx.fillText(String(i), tx, isTop?boardT-2:boardB+9);
+  }
+  
+  // Pieces
+  for(var i=1;i<=24;i++){
+    var tx2 = i<=12 ? boardR-(i-1)*ptW : boardL+(i-13)*ptW;
+    drawPieces(i,tx2,i>=13,ptW);
+  }
+  
+  drawBarPieces();
+  drawBorne(0,midX+ptW*3,boardB-10);
+  drawBorne(1,midX-ptW*3,boardT+10);
+  
+  // Selection highlight
+  if(G.sel>0){
+    var sx = G.sel<=12 ? boardR-(G.sel-1)*ptW : boardL+(G.sel-13)*ptW;
+    cx.strokeStyle='#FFD700'; cx.lineWidth=3;
+    var sy = G.sel>=13 ? boardT : boardB-topH*2;
+    cx.strokeRect(sx-ptW/2,sy,ptW,topH*2);
+  }
+  
+  // Current player indicator
+  cx.fillStyle = G.cur===0 ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.3)';
+  if(G.cur===0) cx.fillRect(2,boardB-topH-10,W-4,12);
+  else cx.fillRect(2,boardT-2,W-4,12);
+}
+
+function drawPieces(point,px,isTop,ptW){
+  var c0=getP(0,point), c1=getP(1,point);
+  var total=c0+c1; if(total===0) return;
+  var colors=['#f0e6d0','#1a1a1a'], strokes=['#c4a882','#444'];
+  var boardB2=H-6, boardT2=6, topH2=(boardB2-boardT2)/2-4;
+  var maxShow=Math.min(total,6);
+  for(var j=0;j<maxShow;j++){
+    var pColor=c0>0?colors[0]:colors[1], pStroke=c0>0?strokes[0]:strokes[1];
+    var py = isTop ? boardT2+10+j*13 : boardB2-10-j*13;
+    cx.fillStyle=pColor; cx.strokeStyle=pStroke; cx.lineWidth=1;
+    cx.beginPath(); cx.arc(px,py,5.5,0,Math.PI*2); cx.fill(); cx.stroke();
+  }
+  if(total>6){
+    cx.fillStyle='#FFD700'; cx.font='bold 8px sans-serif'; cx.textAlign='center';
+    cx.fillText(String(total),px,isTop?boardT2+10+6*13+2:boardB2-10-6*13-2);
+  }
+}
+
+function drawBarPieces(){
+  var midX=W/2;
+  var b0=getP(0,0), b1=getP(1,0);
+  var colors=['#f0e6d0','#1a1a1a'], strokes=['#c4a882','#444'];
+  for(var j=0;j<Math.min(b0,5);j++){
+    cx.fillStyle=colors[0]; cx.strokeStyle=strokes[0]; cx.lineWidth=1;
+    cx.beginPath(); cx.arc(midX-30,H/2-30+j*13,5.5,0,Math.PI*2); cx.fill(); cx.stroke();
+  }
+  if(b0>5){ cx.fillStyle='#FFD700'; cx.font='bold 8px sans-serif'; cx.textAlign='center'; cx.fillText(String(b0),midX-30,H/2-30+5*13+2); }
+  for(var j=0;j<Math.min(b1,5);j++){
+    cx.fillStyle=colors[1]; cx.strokeStyle=strokes[1]; cx.lineWidth=1;
+    cx.beginPath(); cx.arc(midX+30,H/2-30+j*13,5.5,0,Math.PI*2); cx.fill(); cx.stroke();
+  }
+  if(b1>5){ cx.fillStyle='#FFD700'; cx.font='bold 8px sans-serif'; cx.textAlign='center'; cx.fillText(String(b1),midX+30,H/2-30+5*13+2); }
+}
+
+function drawBorne(p,px,py){
+  var cnt=G.borne[p]; if(cnt===0) return;
+  var c=p===0?'#f0e6d0':'#1a1a1a', s=p===0?'#c4a882':'#444';
+  cx.fillStyle='rgba(255,215,0,0.15)'; cx.fillRect(px-15,py-20,30,40);
+  cx.strokeStyle='#FFD700'; cx.lineWidth=1; cx.strokeRect(px-15,py-20,30,40);
+  for(var j=0;j<Math.min(cnt,5);j++){
+    cx.fillStyle=c; cx.strokeStyle=s; cx.lineWidth=1;
+    cx.beginPath(); cx.arc(px,py-12+j*10,5,0,Math.PI*2); cx.fill(); cx.stroke();
+  }
+  cx.fillStyle='#FFD700'; cx.font='bold 9px sans-serif'; cx.textAlign='center';
+  cx.fillText(String(cnt),px,py+25);
+}
+
+// ═══ GAME LOGIC ═══
+function getDiceValues(){
+  var v=[];
+  if(!G.used[0]) v.push(G.dice[0]);
+  if(!G.used[1]) v.push(G.dice[1]);
+  if(G.dice[0]===G.dice[1] && v.length>0){
+    v=[G.dice[0],G.dice[0],G.dice[0],G.dice[0]];
+    var rem=G.used[0]?1:0; v=v.slice(rem);
+  }
+  return v;
+}
+
+function canMoveFrom(p,pt){
+  if(getP(p,pt)<=0) return false;
+  var dv=getDiceValues();
+  for(var i=0;i<dv.length;i++){
+    var tgt=pt-dv[i]*(p===0?-1:1);
+    if(tgt<0||tgt>25) return false;
+    if(tgt===0||tgt===25) return true;
+    if(getP(p===0?1:0,tgt)<=1) return true;
+  }
+  return false;
+}
+
+function getMovesFrom(p,pt){
+  var moves=[], dv=getDiceValues();
+  for(var i=0;i<dv.length;i++){
+    var tgt=pt-dv[i]*(p===0?-1:1);
+    if(tgt<0||tgt>25) continue;
+    if(tgt===0||tgt===25) { moves.push({from:pt,to:tgt,di:i}); continue; }
+    if(getP(p===0?1:0,tgt)<=1) moves.push({from:pt,to:tgt,di:i});
+  }
+  return moves;
+}
+
+function hasAnyMove(){
+  for(var pt=1;pt<=24;pt++) if(getMovesFrom(G.cur,pt).length>0) return true;
+  return false;
+}
+
+function doMove(from,to,di){
+  setP(G.cur,from,getP(G.cur,from)-1);
+  if(to===0||to===25){ G.borne[G.cur]++; }
+  else{
+    setP(G.cur,to,getP(G.cur,to)+1);
+    var opp=G.cur===0?1:0;
+    if(getP(opp,to)===1 && getP(G.cur,to)>=1){
+      setP(opp,to,0); setP(opp,0,getP(opp,0)+1);
+    }
+  }
+  var diff=Math.abs(from-to);
+  if(G.dice[0]===G.dice[1]) G.used[0]=true;
+  else{
+    if(!G.used[0]&&G.dice[0]===diff) G.used[0]=true;
+    else if(!G.used[1]&&G.dice[1]===diff) G.used[1]=true;
+    else if(!G.used[0]) G.used[0]=true;
+    else if(!G.used[1]) G.used[1]=true;
+  }
+  G.sel=-1; updDice(); draw(); checkWin();
+}
+
+function checkWin(){
+  if(G.borne[G.cur]>=15){
+    document.getElementById('wT').textContent='🏆 '+(G.cur===0?'Sen':'Rakip')+' Kazandı!';
+    document.getElementById('win').classList.add('show');
+    return true;
+  }
+  return false;
+}
+
+function nextTurn(){
+  G.cur=G.cur===0?1:0;
+  G.dice=[0,0]; G.used=[false,false]; G.sel=-1; G.rolled=false;
+  updDice(); updInfo();
+  setMsg(G.cur===0?'🎲 Zar at!':'Rakip oynuyor...');
+  if(G.cur===1 && G.mode==='ai') setTimeout(aiRoll,600);
+  draw();
+  if(G.pvp) sendState({cur:G.cur, dice:G.dice, used:G.used, rolled:G.rolled, pts:G.pts.slice(), borne:G.borne.slice()});
+}
+
+function rollDice(){
+  if(G.rolled) return;
+  if(checkWin()) return;
+  G.dice=[Math.ceil(Math.random()*6), Math.ceil(Math.random()*6)];
+  G.used=[false,false]; G.rolled=true;
+  updDice();
+  if(G.dice[0]===G.dice[1]) setMsg('Yedin! ('+G.dice[0]+'-'+G.dice[0]+') İki kez oyna');
+  else setMsg('Seç: hangi taşla oynayacaksın');
+  if(!hasAnyMove()){
+    setMsg('Hamle yok, pas geçiliyor...');
+    setTimeout(nextTurn,800);
+  }
+  draw();
+  if(G.pvp) sendState({dice:G.dice, used:G.used, rolled:G.rolled});
+}
+
+function tap(pt){
+  if(G.aiTurn || !G.rolled) return;
+  if(G.pvp && G.cur!==G.myColor) return;
+  
+  if(G.sel<0){
+    if(getP(G.cur,pt)>0 && canMoveFrom(G.cur,pt)){ G.sel=pt; draw(); }
+  }else{
+    var moves=getMovesFrom(G.cur,G.sel);
+    for(var i=0;i<moves.length;i++){
+      if(moves[i].to===pt){
+        doMove(G.sel,pt,moves[i].di);
+        if(getDiceValues().length>0 && hasAnyMove()) setMsg('Devam et!');
+        else setTimeout(nextTurn,300);
+        return;
+      }
+    }
+    if(getP(G.cur,pt)>0 && canMoveFrom(G.cur,pt)){ G.sel=pt; draw(); }
+    else { G.sel=-1; draw(); }
+  }
+}
+
+// ═══ AI ═══
+function aiRoll(){ G.aiTurn=true; rollDice(); if(!G.rolled){ G.aiTurn=false; return; } setTimeout(aiPlay,400); }
+
+function aiPlay(){
+  var dv=getDiceValues();
+  if(dv.length===0){ G.aiTurn=false; nextTurn(); return; }
+  var bestMove=null, bestScore=-99;
+  for(var pt=1;pt<=24;pt++){
+    if(getP(1,pt)<=0) continue;
+    var moves=getMovesFrom(1,pt);
+    for(var i=0;i<moves.length;i++){
+      var m=moves[i], sc=0;
+      if(m.to===25) sc+=15;
+      if(m.to>=19) sc+=3;
+      if(getP(0,m.to)===1) sc+=4;
+      if(getP(0,m.to)===0) sc+=2;
+      if(m.from>=19) sc+=2;
+      if(sc>bestScore){ bestScore=sc; bestMove=m; }
+    }
+  }
+  if(bestMove){
+    doMove(bestMove.from,bestMove.to,bestMove.di);
+    if(getDiceValues().length>0 && hasAnyMove()) setTimeout(aiPlay,400);
+    else { G.aiTurn=false; setTimeout(nextTurn,300); }
+  }else{ G.aiTurn=false; G.used=[true,true]; nextTurn(); }
+}
+
+// ═══ UI HELPERS ═══
+function updDice(){
+  document.getElementById('d1').textContent=G.dice[0]||'?';
+  document.getElementById('d2').textContent=G.dice[1]||'?';
+  document.getElementById('d1').className='die'+(G.used[0]?' off':'');
+  document.getElementById('d2').className='die'+(G.used[1]?' off':'');
+}
+function updInfo(){
+  document.getElementById('n1').textContent='⚫ Sen ('+G.borne[0]+')';
+  document.getElementById('n2').textContent='⚪ Rakip ('+G.borne[1]+')';
+  document.getElementById('n1').className=G.cur===0?'on':'';
+  document.getElementById('n2').className=G.cur===1?'on':'';
+}
+function setMsg(t){ document.getElementById('msg').textContent=t; }
+
+// ═══ INPUT ═══
+G.cvs.onclick=function(e){
+  if(G.cur===1 && G.mode==='ai') return;
+  var r=G.cvs.getBoundingClientRect();
+  var mx=(e.clientX-r.left)/r.width*G.W;
+  var my=(e.clientY-r.top)/r.height*G.H;
+  var boardT=6, boardB=G.H-6, midX=G.W/2, ptW=(midX-12)/6;
+  var isTop=my<(boardT+boardB)/2;
+  for(var i=1;i<=24;i++){
+    var tx = i<=12 ? midX+ptW/2+(i-1)*ptW : midX-ptW/2-(i-13)*ptW;
+    if(Math.abs(mx-tx)<ptW/2){ tap(i); return; }
+  }
+};
+
+// ═══ SUPABASE PvP ═══
+function initSupabase(){
+  if(!window.TontonSupabase) return;
+  window.TontonSupabase.init({});
+  var tgId=697527694+Math.floor(Math.random()*1000);
+  window.TontonSupabase.registerUser(tgId, 'player_'+tgId, 'Oyuncu '+tgId).then(function(user){
+    if(user) G.config={userId:user.id};
+    console.log('[PvP] User ready:', user?.id);
+  });
+}
+
+function findPvPMatch(){
+  if(!window.TontonSupabase || !G.config?.userId) return;
+  window.TontonSupabase.findMatch('tavla').then(function(result){
+    if(!result) return;
+    if(result.status==='waiting'){
+      setMsg('Rakip bekleniyor...');
+      document.getElementById('bRoll').classList.add('waiting');
+      document.getElementById('bRoll').disabled=true;
+    }else if(result.status==='matched' && result.game){
+      onGameMatched(result.game);
+    }
+  });
+}
+
+function onGameMatched(game){
+  G.gameId=game.id;
+  G.myPlayerNum=game.player1_id===G.config.userId?0:1;
+  G.opponentId=G.myPlayerNum===0?game.player2_id:game.player1_id;
+  G.myColor=G.myPlayerNum;
+  G.cur=0; // Player 0 (white) starts
+  
+  setMsg('Oyun başladı! Sen '+(G.myColor==0myColor==='white'?'⚫ (alt)':'⚪ (üst)'));
+  document.getElementById('bRoll').classList.remove('waiting');
+  document.getElementById('bRoll').disabled=false;
+  setMsg(G.myColor===0?'🎲 Zar at!':'Rakip oynuyor...');
+  
+  window.TontonSupabase.subscribeToGame(G.gameId, onGameStateUpdate);
+}
+
+function onGameStateUpdate(payload){
+  if(!payload || !payload.state) return;
+  var state=typeof payload.state==='string'?JSON.parse(payload.state):payload.state;
+  if(state.cur!==undefined) G.cur=state.cur;
+  if(state.dice) G.dice=state.dice;
+  if(state.used) G.used=state.used;
+  if(state.rolled!==undefined) G.rolled=state.rolled;
+  if(state.pts) G.pts=state.pts;
+  if(state.borne) G.borne=state.borne;
+  updDice(); updInfo(); draw();
+  var isMyTurn = G.cur===G.myColor;
+  setMsg(isMyTurn?'🎲 Zar at!':'Rakip oynuyor...');
+}
+
+function sendState(update){
+  if(!G.pvp || !G.gameId || !window.TontonSupabase) return;
+  if(G.syncPending) return;
+  G.syncPending=true;
+  var fullState={
+    cur:G.cur, dice:G.dice, used:G.used, rolled:G.rolled,
+    pts:G.pts.slice(), borne:G.borne.slice()
+  };
+  Object.assign(fullState, update);
+  window.TontonSupabase.updateGameState(G.gameId, fullState).then(function(){
+    G.syncPending=false;
+  });
+}
+
+function leaveGame(){
+  if(G.gameId && window.TontonSupabase) window.TontonSupabase.unsubscribeFromGame();
+  G.gameId=null; G.myPlayerNum=null; G.opponentId=null; G.pvp=false;
+}
+
+function bindUI(){
+  document.getElementById('bRoll').onclick=function(){ if(!G.rolled && !G.aiTurn) rollDice(); };
+  document.getElementById('bPass').onclick=function(){ if(G.rolled && !G.aiTurn) nextTurn(); };
+  document.getElementById('bNew').onclick=resetGame;
+  document.getElementById('bR').onclick=resetGame;
+  document.getElementById('mAi').onclick=function(){ G.mode='ai'; this.classList.add('on'); document.getElementById('mPvP').classList.remove('on'); resetGame(); };
+  document.getElementById('mPvP').onclick=function(){
+    if(!window.TontonSupabase || !window.TontonSupabase.isConnected()){
+      setMsg('Supabase bağlı değil'); return;
+    }
+    G.mode='pvp'; G.pvp=true;
+    this.classList.add('on'); document.getElementById('mAi').classList.remove('on');
+    setMsg('Eşleşme aranıyor...');
+    findPvPMatch();
+  };
+  window.onresize=function(){ setupCanvas(); draw(); };
+}
+
+// START
+init();
+</script>
+</body>
+</html>
