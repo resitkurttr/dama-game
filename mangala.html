@@ -2,82 +2,169 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>🌾 Mangala King</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0d2818">
+    <title data-i18n="mangala.title">Mangala</title>
+    <script src="i18n.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-        body{background:linear-gradient(135deg,#1a3a2a,#0d2818);min-height:100vh;display:flex;flex-direction:column;align-items:center;font-family:'Segoe UI',sans-serif;color:white;padding:10px;gap:10px;user-select:none}
-        h1{font-size:20px;text-shadow:0 0 15px rgba(76,175,80,0.5)}
-        .mode-bar{display:flex;gap:4px;background:rgba(255,255,255,0.1);border-radius:18px;padding:3px}
-        .mode-btn{padding:5px 12px;border:none;border-radius:16px;background:transparent;color:rgba(255,255,255,0.5);cursor:pointer;font-size:12px}
+        html,body{width:100%;height:100%;overflow:hidden}
+        body{
+            background:linear-gradient(135deg,#1a3a2a,#0d2818);
+            font-family:'Segoe UI',sans-serif;
+            color:white;
+            display:flex;flex-direction:column;
+            padding:8px;
+            gap:6px;
+            user-select:none;
+            padding-top:max(8px, env(safe-area-inset-top));
+            padding-bottom:max(8px, env(safe-area-inset-bottom));
+        }
+
+        /* === HEADER === */
+        .header{
+            display:flex;justify-content:space-between;align-items:center;
+            flex-shrink:0;height:32px;
+        }
+        h1{font-size:18px;text-shadow:0 0 15px rgba(76,175,80,0.5);margin:0}
+        .header-actions{display:flex;gap:4px;align-items:center}
+        .mode-bar{display:flex;gap:3px;background:rgba(255,255,255,0.1);border-radius:14px;padding:2px}
+        .mode-btn{padding:4px 10px;border:none;border-radius:12px;background:transparent;color:rgba(255,255,255,0.5);cursor:pointer;font-size:11px;font-family:inherit;transition:all 0.2s}
         .mode-btn.active{background:rgba(76,175,80,0.3);color:#4CAF50}
-        .info-bar{display:flex;justify-content:space-between;width:100%;max-width:400px;font-size:13px}
-        .player{padding:5px 12px;border-radius:8px;background:rgba(255,255,255,0.08)}
+        .lang-btn{padding:3px 7px;border:none;border-radius:10px;background:rgba(0,152,234,0.2);color:#0098EA;cursor:pointer;font-size:11px;font-family:inherit}
+
+        /* === SCORE BAR === */
+        .info-bar{display:flex;justify-content:space-between;gap:8px;flex-shrink:0}
+        .player{
+            flex:1;padding:5px 10px;border-radius:8px;
+            background:rgba(255,255,255,0.08);text-align:center;
+            font-size:12px;line-height:1.3;
+        }
         .player.active{background:rgba(76,175,80,0.2);border:1px solid #4CAF50}
-        #board{width:100%;max-width:400px;background:linear-gradient(135deg,#8B4513,#654321);border-radius:14px;padding:8px;display:flex;flex-direction:column;justify-content:space-between;border:3px solid #a0522d;box-shadow:0 8px 25px rgba(0,0,0,0.5)}
-        .row{display:flex;gap:4px;justify-content:center}
-        .pit{flex:1;aspect-ratio:1;max-width:48px;min-width:28px;background:radial-gradient(circle,#2d1a0e,#1a0f08);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:2px solid #4a3020;transition:all 0.2s}
-        .pit:active{transform:scale(0.95)}
+        .player .lbl{font-size:10px;opacity:0.7}
+
+        /* === BOARD === */
+        #board-wrap{
+            flex:1;min-height:0;
+            display:flex;align-items:center;justify-content:center;
+        }
+        #board{
+            width:100%;max-width:min(100%, 480px);
+            /* aspect-ratio ile responsive - delik oranini koru */
+            aspect-ratio:1/1.05;
+            background:linear-gradient(135deg,#8B4513,#654321);
+            border-radius:14px;padding:6px;
+            display:flex;flex-direction:column;justify-content:space-between;
+            border:2px solid #a0522d;
+            box-shadow:0 8px 25px rgba(0,0,0,0.5);
+        }
+        .board-row{display:flex;gap:3px;align-items:stretch;justify-content:space-between;flex:1}
+        .row{display:flex;gap:3px;flex:1;justify-content:center}
+        .pit{
+            flex:1;aspect-ratio:1;
+            background:radial-gradient(circle,#2d1a0e,#1a0f08);
+            border-radius:50%;
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
+            cursor:pointer;
+            border:2px solid #4a3020;
+            transition:all 0.2s;
+            min-width:24px;min-height:24px;
+        }
+        .pit:active{transform:scale(0.93)}
         .pit.sel{border-color:#4CAF50;box-shadow:0 0 10px #4CAF50}
-        .pit .count{font-size:14px;font-weight:bold}
-        .store{width:48px;max-width:56px;background:radial-gradient(circle,#3d2a1a,#1a0f08);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px solid #6a4a30;min-width:38px}
-        .store .count{font-size:20px;font-weight:bold;color:#FFD700}
-        .board-row{display:flex;gap:4px;align-items:center;justify-content:center}
-        .label{font-size:10px;opacity:0.5}
-        .btn{padding:8px 20px;font-size:13px;border:none;border-radius:14px;cursor:pointer;font-weight:bold}
+        .pit.disabled{opacity:0.4;cursor:not-allowed}
+        .pit .count{font-size:13px;font-weight:bold}
+        .store{
+            width:42px;aspect-ratio:1/1.4;flex-shrink:0;
+            background:radial-gradient(circle,#3d2a1a,#1a0f08);
+            border-radius:10px;
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
+            border:2px solid #6a4a30;
+        }
+        .store .count{font-size:18px;font-weight:bold;color:#FFD700}
+        .store .lbl{font-size:8px;opacity:0.6;margin-top:2px}
+
+        /* === STATUS + BUTTONS === */
+        .footer{flex-shrink:0;display:flex;flex-direction:column;gap:6px}
+        .status{font-size:12px;padding:5px 14px;background:rgba(255,255,255,0.08);border-radius:12px;text-align:center}
+        .btn-row{display:flex;gap:6px;justify-content:center}
+        .btn{padding:7px 16px;font-size:12px;border:none;border-radius:12px;cursor:pointer;font-weight:bold;font-family:inherit}
         .btn-gold{background:linear-gradient(145deg,#FFD700,#FFA500);color:#1a1a2e}
-        .btn-green{background:linear-gradient(145deg,#4CAF50,#2E7D32);color:white}
         .btn-red{background:linear-gradient(145deg,#f44336,#b71c1c);color:white}
-        .btn-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-        .status{font-size:13px;padding:5px 14px;background:rgba(255,255,255,0.08);border-radius:12px}
+
+        /* === OVERLAY === */
         .overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:14px}
         .overlay.show{display:flex}
-        .overlay h2{font-size:24px;text-shadow:0 0 25px gold}
-        .overlay .btn{padding:10px 28px;font-size:15px}
+        .overlay h2{font-size:22px;text-shadow:0 0 25px gold}
+        .btn-green{background:linear-gradient(145deg,#4CAF50,#2E7D32);color:white;padding:10px 28px;font-size:14px}
     </style>
 </head>
 <body>
-    <h1>🌾 Mangala King</h1>
-    <div class="mode-bar">
-        <button class="mode-btn active" id="mAi">🤖 AI</button>
-        <button class="mode-btn" id="m2p">👥 2 Kişi</button>
+    <div class="header">
+        <h1>🌾 <span data-i18n="mangala.title">Mangala</span></h1>
+        <div class="header-actions">
+            <div class="mode-bar">
+                <button class="mode-btn active" id="mAi">🤖 <span data-i18n="mode.ai">AI</span></button>
+                <button class="mode-btn" id="m2p">👥 <span data-i18n="mode.2p">2 Kişi</span></button>
+            </div>
+            <button class="lang-btn" id="langBtn">🌐</button>
+        </div>
     </div>
+
     <div class="info-bar">
-        <div class="player" id="p1"><span id="p1n">⚫ Sen</span><div style="font-size:10px;opacity:0.7" id="s0">Depo: 0</div></div>
-        <div class="player active" id="p2"><span id="p2n">⚪ AI</span><div style="font-size:10px;opacity:0.7" id="s1">Depo: 0</div></div>
+        <div class="player" id="p1"><span id="p1n">⚫ <span data-i18n="player.you">Sen</span></span><div class="lbl"><span data-i18n="mangala.stores">Depo</span>: <span id="s1">0</span></div></div>
+        <div class="player active" id="p2"><span id="p2n">⚪ <span data-i18n="player.ai">AI</span></span><div class="lbl"><span data-i18n="mangala.stores">Depo</span>: <span id="s0">0</span></div></div>
     </div>
-    <div id="board">
-        <div class="board-row" style="flex-direction:row-reverse;">
-            <div class="store" id="store1"><div class="count" id="sv1">0</div><div class="label">⚫ Sen</div></div>
-            <div class="row" id="row1"></div>
+
+    <div id="board-wrap">
+        <div id="board">
+            <div class="board-row" style="flex-direction:row-reverse;">
+                <div class="store" id="store1"><div class="count" id="sv1">0</div><div class="lbl" data-i18n="player.you">Sen</div></div>
+                <div class="row" id="row1"></div>
+            </div>
+            <div class="board-row">
+                <div class="store" id="store0"><div class="count" id="sv0">0</div><div class="lbl" data-i18n="player.ai">AI</div></div>
+                <div class="row" id="row0"></div>
+            </div>
         </div>
-        <div class="board-row">
-            <div class="store" id="store0"><div class="count" id="sv0">0</div><div class="label">⚪ AI</div></div>
-            <div class="row" id="row0"></div>
+    </div>
+
+    <div class="footer">
+        <div class="status" id="status">⚫ <span data-i18n="mangala.your_pits">Senin sıran</span></div>
+        <div class="btn-row">
+            <button class="btn btn-gold" id="btnNew">🔄 <span data-i18n="btn.new_game">Yeni</span></button>
+            <button class="btn btn-red" id="btnUndo">↩️ <span data-i18n="btn.undo">Geri Al</span></button>
         </div>
     </div>
-    <div class="status" id="status">⚪ AI düşünüyor...</div>
-    <div class="btn-row">
-        <button class="btn btn-gold" id="btnNew">🔄 Yeni</button>
-        <button class="btn btn-red" id="btnUndo">↩️ Geri Al</button>
-    </div>
+
     <div class="overlay" id="overlay">
         <h2 id="winText"></h2>
-        <button class="btn btn-green" id="btnAgain">🔄 Tekrar Oyna</button>
+        <button class="btn btn-green" id="btnAgain">🔄 <span data-i18n="btn.retry">Tekrar</span></button>
     </div>
 
 <script>
 (function(){
-// Mangala: 6 delik x 2 + 2 depo
-// Oyuncu 0 = beyaz (üst/sol depo) = AI
-// Oyuncu 1 = siyah (alt/sağ depo) = Oyuncu
 var pits=[],stores=[0,0],currentPlayer=1,history=[],gameMode='ai',aiThinking=false;
+
+function t(k){return (window.i18n && window.i18n.t) ? window.i18n.t(k) : k;}
+
+function updateLabels(){
+    // Oyuncu isimleri
+    var p1n=document.getElementById('p1n');
+    p1n.innerHTML='⚫ <span data-i18n="player.you">'+t('player.you')+'</span>';
+    var p2n=document.getElementById('p2n');
+    p2n.innerHTML='⚪ '+(gameMode==='ai'?'<span data-i18n="player.ai">'+t('player.ai')+'</span>':'<span data-i18n="player.player2">'+t('player.player2')+'</span>');
+    // Store label'lari
+    document.querySelector('#store1 .lbl').innerHTML=t('player.you');
+    document.querySelector('#store0 .lbl').innerHTML=gameMode==='ai'?t('player.ai'):t('player.player2');
+}
 
 function initGame(){
     pits=[[4,4,4,4,4,4],[4,4,4,4,4,4]];
     stores=[0,0];currentPlayer=1;history=[];aiThinking=false;
-    render();updateStatus('⚫ Sen - Bir deliğe tıkla!');
     document.getElementById('overlay').classList.remove('show');
+    render();
+    updateStatus('⚫ '+t('mangala.your_pits'));
     if(currentPlayer===0&&gameMode==='ai')runAI();
 }
 
@@ -89,20 +176,21 @@ function saveState(){
 function render(){
     var r0=document.getElementById('row0'),r1=document.getElementById('row1');
     r0.innerHTML='';r1.innerHTML='';
-    // Oyuncu 1 (siyah) - üst sıra (ters)
     for(var i=5;i>=0;i--)r1.appendChild(createPit(1,i));
-    // Oyuncu 0 (beyaz) - alt sıra
     for(var i=0;i<6;i++)r0.appendChild(createPit(0,i));
     document.getElementById('sv0').textContent=stores[0];
     document.getElementById('sv1').textContent=stores[1];
-    document.getElementById('s0').textContent='Depo: '+stores[0];
-    document.getElementById('s1').textContent='Depo: '+stores[1];
+    document.getElementById('s0').textContent=stores[0];
+    document.getElementById('s1').textContent=stores[1];
     document.getElementById('p1').classList.toggle('active',currentPlayer===1);
     document.getElementById('p2').classList.toggle('active',currentPlayer===0);
 }
 
 function createPit(player,index){
     var el=document.createElement('div');el.className='pit';
+    if(player!==currentPlayer||aiThinking||pits[player][index]===0){
+        el.classList.add('disabled');
+    }
     el.innerHTML='<div class="count">'+pits[player][index]+'</div>';
     (function(p,i){el.addEventListener('click',function(e){e.preventDefault();onPitClick(p,i);});})(player,index);
     return el;
@@ -129,7 +217,6 @@ function doMove(player,index){
         }
         pits[row][cur]++;
     }
-    // Son taş kendi deliğine → yakala
     if(row===player&&pits[row][cur]===1&&cur>=0&&cur<6){
         var opp=5-cur;
         if(pits[player][opp]>0){
@@ -147,10 +234,13 @@ function checkWin(){
         stores[0]+=t0;stores[1]+=t1;
         for(var i=0;i<6;i++){pits[0][i]=0;pits[1][i]=0;}
         render();
-        var winner=stores[1]>stores[0]?'⚫ Sen':'⚪ AI';
-        if(stores[0]===stores[1])winner='Berabere';
-        document.getElementById('winText').textContent='🏆 '+winner+' Kazandı! ('+stores[1]+'-'+stores[0]+')';
-        document.getElementById('overlay').classList.add('show');return true;
+        var winner;
+        if(stores[1]>stores[0]) winner='⚫ '+t('player.you')+' '+t('msg.you_won');
+        else if(stores[0]>stores[1]) winner='⚪ '+t('player.ai')+' '+t('msg.you_won');
+        else winner=t('msg.draw');
+        document.getElementById('winText').textContent='🏆 '+winner+' ('+stores[1]+'-'+stores[0]+')';
+        document.getElementById('overlay').classList.add('show');
+        return true;
     }
     return false;
 }
@@ -160,15 +250,24 @@ function undoMove(){
     var prev=history.pop();
     pits=[prev.pits[0].slice(),prev.pits[1].slice()];
     stores=prev.stores.slice();currentPlayer=prev.player;
-    render();updateStatus('Geri alındı - '+(currentPlayer===1?'⚫ Sıran':'⚪ AI düşünüyor...'));
+    render();
+    updateStatus('↩️ '+(currentPlayer===1?'⚫ '+t('mangala.your_pits'):'⚪ '+t('dama.turn_ai')));
     if(currentPlayer===0&&gameMode==='ai')runAI();
 }
 
-function updateStatus(msg){document.getElementById('status').textContent=msg;}
+function updateStatus(msg){
+    if(typeof msg==='string'){
+        document.getElementById('status').innerHTML=msg;
+    } else {
+        // Eğer msg obje olarak gelirse (i18n key + sembol)
+        document.getElementById('status').innerHTML=msg.html;
+    }
+}
 
-// ─── AI ───
+// AI
 function runAI(){
-    aiThinking=true;updateStatus('⚪ AI düşünüyor...');
+    aiThinking=true;
+    updateStatus({html:'⚪ '+t('dama.turn_ai')});
     setTimeout(function(){aiDecide();},600);
 }
 
@@ -177,38 +276,48 @@ function aiDecide(){
     for(var i=0;i<6;i++){
         if(pits[0][i]===0)continue;
         var sc=0,count=pits[0][i];
-        // Simüle et
         var testPits=[pits[0].slice(),pits[1].slice()];var testStores=stores.slice();
         var cur=i,row=0;
         for(var s=0;s<count;s++){cur++;if(cur>=6){if(row===0&&cur===6){testStores[0]++;cur=-1;row=1;continue;}row=1-row;cur=0;}testPits[row][cur]++;}
-        // Yakalama bonusu
         if(row===0&&testPits[0][cur]===1&&cur>=0&&cur<6){
             var opp=5-cur;
             if(testPits[0][opp]>0)sc+=testPits[0][opp]+1;
         }
-        // Depoya taş düşürme bonusu
         if(cur===6||row===0)sc+=3;
-        // Rakip deliklerini boşaltma
         sc+=pits[0][i]*0.2;
-        // Eve yakınlık
         if(i>=4)sc+=2;
         if(sc>bestScore){bestScore=sc;best=i;}
     }
     if(best>=0){
         saveState();doMove(0,best);render();
-        if(!checkWin()){currentPlayer=1;aiThinking=false;updateStatus('⚫ Sen - Sıran!');}
+        if(!checkWin()){currentPlayer=1;aiThinking=false;updateStatus({html:'⚫ '+t('mangala.your_pits')});}
         else aiThinking=false;
     }else{
-        currentPlayer=1;aiThinking=false;updateStatus('⚫ Sen - Sıran!');
+        currentPlayer=1;aiThinking=false;updateStatus({html:'⚫ '+t('mangala.your_pits')});
     }
 }
 
+// Butonlar
 document.getElementById('btnNew').addEventListener('click',initGame);
 document.getElementById('btnAgain').addEventListener('click',initGame);
 document.getElementById('btnUndo').addEventListener('click',undoMove);
-document.getElementById('mAi').addEventListener('click',function(){gameMode='ai';document.getElementById('mAi').classList.add('active');document.getElementById('m2p').classList.remove('active');initGame();});
-document.getElementById('m2p').addEventListener('click',function(){gameMode='2p';document.getElementById('m2p').classList.add('active');document.getElementById('mAi').classList.remove('active');initGame();});
+document.getElementById('mAi').addEventListener('click',function(){gameMode='ai';document.getElementById('mAi').classList.add('active');document.getElementById('m2p').classList.remove('active');updateLabels();initGame();});
+document.getElementById('m2p').addEventListener('click',function(){gameMode='2p';document.getElementById('m2p').classList.add('active');document.getElementById('mAi').classList.remove('active');updateLabels();initGame();});
 
+document.getElementById('langBtn').addEventListener('click',function(){
+    var cur=(window.i18n && window.i18n.getLocale()) || 'tr';
+    window.i18n.setLocale(cur==='tr'?'en':'tr');
+    updateLabels();
+    if(aiThinking) updateStatus({html:'⚪ '+t('dama.turn_ai')});
+    else if(currentPlayer===1) updateStatus({html:'⚫ '+t('mangala.your_pits')});
+});
+window.addEventListener('tonton:localechange', function(){
+    updateLabels();
+    if(aiThinking) updateStatus({html:'⚪ '+t('dama.turn_ai')});
+    else if(currentPlayer===1) updateStatus({html:'⚫ '+t('mangala.your_pits')});
+});
+
+updateLabels();
 initGame();
 })();
 </script>
