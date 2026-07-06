@@ -2,136 +2,408 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0118">
     <title>🎮 Tonton Game - Mini Oyunlar</title>
+    <link rel="icon" type="image/png" href="icon.png">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        :root {
+            --bg-1: #0a0118;
+            --bg-2: #1a0b3d;
+            --bg-3: #2d1b69;
+            --accent: #FFD700;
+            --accent-2: #FFA500;
+            --ton: #0098EA;
+            --success: #10b981;
+            --card-bg: rgba(255,255,255,0.04);
+            --card-border: rgba(255,255,255,0.08);
+            --text: #ffffff;
+            --text-dim: rgba(255,255,255,0.6);
+        }
+
+        html, body { height: 100%; }
+
         body {
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            min-height: 100vh; display: flex; flex-direction: column;
-            align-items: center; font-family: 'Segoe UI', sans-serif;
-            color: white; padding: 60px 20px 20px; gap: 20px;
+            background: radial-gradient(ellipse at top, var(--bg-3), var(--bg-2) 40%, var(--bg-1) 80%);
+            background-attachment: fixed;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding-bottom: env(safe-area-inset-bottom);
         }
-        h1 { font-size: 32px; text-shadow: 0 0 30px rgba(255,215,0,0.5); margin-top: 20px; }
-        .subtitle { font-size: 14px; opacity: 0.6; }
-        .games { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; max-width: 400px; }
+
+        /* Animated background particles */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(255,215,0,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(0,152,234,0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+            animation: float 20s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translate(0,0); }
+            50% { transform: translate(20px,-20px); }
+        }
+
+        /* === WALLET BAR === */
+        .wallet-bar {
+            position: sticky; top: 0; left: 0; right: 0;
+            background: rgba(10,1,24,0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--card-border);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            z-index: 100;
+        }
+        .wallet-bar__brand {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 13px; font-weight: 600;
+        }
+        .wallet-bar__brand-icon {
+            width: 24px; height: 24px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+        }
+        .wallet-bar__balance {
+            font-size: 13px;
+            color: var(--accent);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            display: none;
+        }
+        .wallet-bar__balance.show { display: inline; }
+        .wallet-btn {
+            background: linear-gradient(135deg, var(--ton), #0070a8);
+            color: #fff;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(0,152,234,0.3);
+            white-space: nowrap;
+            font-family: inherit;
+        }
+        .wallet-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,152,234,0.4); }
+        .wallet-btn:active { transform: scale(0.97); }
+        .wallet-btn.connected {
+            background: linear-gradient(135deg, var(--success), #059669);
+            box-shadow: 0 4px 14px rgba(16,185,129,0.3);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 4px 14px rgba(16,185,129,0.3); }
+            50% { box-shadow: 0 4px 14px rgba(16,185,129,0.6); }
+        }
+
+        /* === HEADER === */
+        .hero {
+            text-align: center;
+            padding: 32px 20px 24px;
+            position: relative;
+            z-index: 1;
+        }
+        .hero__logo {
+            width: 72px; height: 72px;
+            margin: 0 auto 12px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 36px;
+            box-shadow: 0 8px 32px rgba(255,215,0,0.25);
+            animation: logoGlow 3s ease-in-out infinite;
+        }
+        @keyframes logoGlow {
+            0%, 100% { box-shadow: 0 8px 32px rgba(255,215,0,0.25); }
+            50% { box-shadow: 0 8px 48px rgba(255,215,0,0.45); }
+        }
+        .hero__title {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+        .hero__subtitle {
+            font-size: 13px;
+            color: var(--text-dim);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* === GAMES GRID === */
+        .games {
+            padding: 0 16px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 480px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
         .game-card {
-            background: rgba(255,255,255,0.05); border-radius: 16px;
-            padding: 20px; text-decoration: none; color: white;
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: transform 0.2s, border-color 0.2s;
-            display: flex; align-items: center; gap: 16px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            text-decoration: none;
+            color: var(--text);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .game-card:active { transform: scale(0.97); }
-        .game-card:hover { border-color: rgba(255,215,0,0.4); }
-        .game-icon { font-size: 40px; }
-        .game-info h3 { font-size: 18px; margin-bottom: 4px; }
-        .game-info p { font-size: 12px; opacity: 0.6; }
+        .game-card::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,215,0,0.1), transparent 50%);
+            opacity: 0;
+            transition: opacity 0.25s;
+        }
+        .game-card:hover {
+            border-color: rgba(255,215,0,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+        }
+        .game-card:hover::before { opacity: 1; }
+        .game-card:active { transform: scale(0.98); }
+
+        .game-card__icon {
+            width: 56px; height: 56px;
+            background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,165,0,0.1));
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+        .game-card__info {
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+        .game-card__title {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .game-card__desc {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-bottom: 6px;
+        }
+        .game-card__badges {
+            display: flex; gap: 6px; flex-wrap: wrap;
+        }
         .badge {
-            font-size: 10px; padding: 2px 8px; border-radius: 10px;
-            background: rgba(255,215,0,0.2); color: #FFD700;
-            display: inline-block; margin-top: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: rgba(255,215,0,0.15);
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
+        .badge.pvp {
+            background: rgba(0,152,234,0.15);
+            color: var(--ton);
+        }
+        .game-card__chevron {
+            color: var(--text-dim);
+            font-size: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* === FOOTER === */
+        .footer {
+            text-align: center;
+            padding: 16px 20px 32px;
+            color: var(--text-dim);
+            font-size: 11px;
+            position: relative;
+            z-index: 1;
+        }
+        .footer a { color: var(--accent); text-decoration: none; }
     </style>
 </head>
 <body>
-    <h1>🎮 Tonton Game</h1>
-    <p class="subtitle">Kültürel Mini Oyunlar</p>
+    <!-- Wallet Bar -->
+    <div class="wallet-bar">
+        <div class="wallet-bar__brand">
+            <div class="wallet-bar__brand-icon">🎮</div>
+            <span>Tonton</span>
+        </div>
+        <span id="walletBalance" class="wallet-bar__balance">0.00 TON</span>
+        <button id="walletBtn" class="wallet-btn">Cuzdan Bagla</button>
+    </div>
 
+    <!-- Hero -->
+    <div class="hero">
+        <div class="hero__logo">🎲</div>
+        <h1 class="hero__title">Tonton Game</h1>
+        <p class="hero__subtitle">Kulturel Mini Oyunlar</p>
+    </div>
+
+    <!-- Games -->
     <div class="games">
         <a class="game-card" href="dama.html">
-            <div class="game-icon">🎲</div>
-            <div class="game-info">
-                <h3>Dama</h3>
-                <p>Klasik strateji oyunu - 8x8 tahta</p>
-                <span class="badge">🤖 AI | 👥 2 Kişi</span>
+            <div class="game-card__icon">🎲</div>
+            <div class="game-card__info">
+                <div class="game-card__title">Dama</div>
+                <div class="game-card__desc">Klasik 8x8 strateji oyunu</div>
+                <div class="game-card__badges">
+                    <span class="badge">AI</span>
+                    <span class="badge">2 Kişi</span>
+                </div>
             </div>
+            <div class="game-card__chevron">›</div>
         </a>
+
         <a class="game-card" href="dama-pvp.html">
-            <div class="game-icon">🌐</div>
-            <div class="game-info">
-                <h3>Dama PvP</h3>
-                <p>Online çoklu oyuncu - Eşleşme ve turnuva</p>
-                <span class="badge">🌐 PvP Online</span>
+            <div class="game-card__icon">🌐</div>
+            <div class="game-card__info">
+                <div class="game-card__title">Dama PvP</div>
+                <div class="game-card__desc">Online coklu oyuncu</div>
+                <div class="game-card__badges">
+                    <span class="badge pvp">PvP Online</span>
+                </div>
             </div>
+            <div class="game-card__chevron">›</div>
         </a>
 
         <a class="game-card" href="pingpong.html">
-            <div class="game-icon">🏓</div>
-            <div class="game-info">
-                <h3>Ping Pong</h3>
-                <p>Hızlı ve eğlenceli - 2D klasik</p>
-                <span class="badge">🤖 AI | 👥 2 Kişi</span>
+            <div class="game-card__icon">🏓</div>
+            <div class="game-card__info">
+                <div class="game-card__title">Ping Pong</div>
+                <div class="game-card__desc">Hizli ve eglenceli</div>
+                <div class="game-card__badges">
+                    <span class="badge">AI</span>
+                    <span class="badge">2 Kişi</span>
+                </div>
             </div>
+            <div class="game-card__chevron">›</div>
         </a>
+
         <a class="game-card" href="pingpong-pvp.html">
-            <div class="game-icon">🌐</div>
-            <div class="game-info">
-                <h3>Ping Pong PvP</h3>
-                <p>Gerçek zamanlı online maç - Supabase Realtime</p>
-                <span class="badge">🌐 PvP Online</span>
+            <div class="game-card__icon">🌐</div>
+            <div class="game-card__info">
+                <div class="game-card__title">Ping Pong PvP</div>
+                <div class="game-card__desc">Gercek zamanli online mac</div>
+                <div class="game-card__badges">
+                    <span class="badge pvp">PvP Online</span>
+                </div>
             </div>
+            <div class="game-card__chevron">›</div>
         </a>
 
         <a class="game-card" href="mangala.html">
-            <div class="game-icon">🌾</div>
-            <div class="game-info">
-                <h3>Mangala</h3>
-                <p>Taş toplama stratejisi - Afrika kökenli</p>
-                <span class="badge">🤖 AI | 👥 2 Kişi</span>
+            <div class="game-card__icon">🌾</div>
+            <div class="game-card__info">
+                <div class="game-card__title">Mangala</div>
+                <div class="game-card__desc">Tas toplama stratejisi</div>
+                <div class="game-card__badges">
+                    <span class="badge">AI</span>
+                    <span class="badge">2 Kişi</span>
+                </div>
             </div>
+            <div class="game-card__chevron">›</div>
         </a>
+
         <a class="game-card" href="mangala-pvp.html">
-            <div class="game-icon">🌐</div>
-            <div class="game-info">
-                <h3>Mangala PvP</h3>
-                <p>Online çoklu oyuncu - Eşleşme ve turnuva</p>
-                <span class="badge">🌐 PvP Online</span>
+            <div class="game-card__icon">🌐</div>
+            <div class="game-card__info">
+                <div class="game-card__title">Mangala PvP</div>
+                <div class="game-card__desc">Online coklu oyuncu</div>
+                <div class="game-card__badges">
+                    <span class="badge pvp">PvP Online</span>
+                </div>
             </div>
+            <div class="game-card__chevron">›</div>
         </a>
     </div>
 
-    <p style="margin-top:20px;opacity:0.3;font-size:12px;">Tonton Game v1.0 - Telegram Mini App</p>
-
-    <div id="wallet-bar" style="position:fixed;top:0;left:0;right:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);padding:8px 12px;display:flex;justify-content:space-between;align-items:center;z-index:100;">
-        <span style="font-size:12px;opacity:0.7;">TON Wallet</span>
-        <button id="wallet-btn" style="background:linear-gradient(90deg,#0098EA,#0070a8);color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">Cuzdan Bagla</button>
-        <span id="wallet-balance" style="font-size:11px;opacity:0;color:#FFD700;"></span>
+    <!-- Footer -->
+    <div class="footer">
+        <a href="terms.html">Kullanim Kosullari</a> ·
+        <a href="privacy.html">Gizlilik</a><br>
+        Tonton Game v1.0 · TON destekli
     </div>
 
+    <!-- TON Connect UI SDK -->
     <script src="tonconnect-ui.min.js"></script>
-    <script src="ton-wallet.js"></script>
+
+    <!-- Wallet Logic -->
     <script>
     (function(){
-        var btn = document.getElementById('wallet-btn');
-        var bal = document.getElementById('wallet-balance');
+        var btn = document.getElementById('walletBtn');
+        var bal = document.getElementById('walletBalance');
+        var UI = (window.TON_CONNECT_UI && window.TON_CONNECT_UI.TonConnectUI) || window.TonConnectUI;
 
-        // TontonWallet.init() otomatik TonConnectUI olusturur
-        // Wallet zaten bagliysa adresi goster
-        try {
-            if (window.TonConnectUI) {
-                var ui = new TonConnectUI({
-                    manifestUrl: 'https://resitkurttr.github.io/dama-game/tonconnect-manifest.json'
-                });
-                ui.onStatusChange(function(w){
-                    if (w) {
-                        var addr = w.account.address;
-                        var short = addr.slice(0,6) + '...' + addr.slice(-4);
-                        btn.textContent = short;
-                        btn.style.background = '#10b981';
-                    } else {
-                        btn.textContent = 'Cuzdan Bagla';
-                        btn.style.background = 'linear-gradient(90deg,#0098EA,#0070a8)';
-                        bal.style.opacity = '0';
-                    }
-                });
-                btn.onclick = function(){
-                    if (ui.connected) ui.disconnect();
-                    else ui.openModal();
-                };
-                window._tontonUI = ui;
+        if (!UI) {
+            console.error('TonConnectUI yuklenemedi');
+            btn.textContent = 'Wallet Hatasi';
+            btn.disabled = true;
+            return;
+        }
+
+        var ui = new UI({
+            manifestUrl: 'https://resitkurttr.github.io/dama-game/tonconnect-manifest.json'
+        });
+
+        function updateUI(w) {
+            if (w && w.account) {
+                var addr = w.account.address || '';
+                var short = addr.slice(0,4) + '...' + addr.slice(-4);
+                btn.textContent = short;
+                btn.classList.add('connected');
+                bal.classList.add('show');
+                // Basit bakiye gosterimi (placeholder)
+                bal.textContent = 'TON';
+            } else {
+                btn.textContent = 'Cuzdan Bagla';
+                btn.classList.remove('connected');
+                bal.classList.remove('show');
             }
-        } catch(e) { console.warn('TON init:', e); }
+        }
+
+        ui.onStatusChange(updateUI);
+
+        btn.addEventListener('click', function() {
+            if (ui.connected) {
+                ui.disconnect();
+            } else {
+                ui.openModal();
+            }
+        });
+
+        // Sayfa kapatilirken baglanti durumunu kontrol et
+        if (ui.connected) {
+            updateUI({ account: { address: 'connected' } });
+        }
     })();
     </script>
 </body>
