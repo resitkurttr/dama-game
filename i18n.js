@@ -68,8 +68,11 @@
             // Dama ozel
             'dama.title': 'Dama',
             'dama.crowned': 'Kral!',
-            'dama.turn_you': 'Senin sıra',
+            'dama.turn_you': 'Sıran',
             'dama.turn_ai': 'AI düşünüyor...',
+            'dama.pieces': 'taş',
+            'dama.all_captured': 'Tüm taşlar yok edildi',
+            'dama.no_moves': 'Hamle hakkı yok',
 
             // Ping pong ozel
             'pingpong.title': 'Ping Pong',
@@ -148,6 +151,9 @@
             'dama.crowned': 'King!',
             'dama.turn_you': 'Your turn',
             'dama.turn_ai': 'AI thinking...',
+            'dama.pieces': 'pieces',
+            'dama.all_captured': 'All pieces captured',
+            'dama.no_moves': 'No moves left',
 
             // Ping pong
             'pingpong.title': 'Ping Pong',
