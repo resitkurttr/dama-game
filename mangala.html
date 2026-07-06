@@ -11,47 +11,48 @@
         html,body{width:100%;height:100%;overflow:hidden}
         body{
             background:linear-gradient(135deg,#1a3a2a,#0d2818);
-            font-family:'Segoe UI',sans-serif;
-            color:white;
+            font-family:'Segoe UI',sans-serif;color:#fff;
             display:flex;flex-direction:column;
-            padding:8px;
-            gap:6px;
             user-select:none;
-            padding-top:max(8px, env(safe-area-inset-top));
-            padding-bottom:max(8px, env(safe-area-inset-bottom));
+            padding-top:max(6px, env(safe-area-inset-top));
+            padding-bottom:max(6px, env(safe-area-inset-bottom));
         }
 
-        /* === HEADER === */
-        .header{
-            display:flex;justify-content:space-between;align-items:center;
-            flex-shrink:0;height:32px;
+        /* HEADER */
+        #hdr{
+            display:flex;justify-content:center;gap:6px;
+            padding:6px;background:#111;flex-shrink:0;align-items:center;
         }
-        h1{font-size:18px;text-shadow:0 0 15px rgba(76,175,80,0.5);margin:0}
-        .header-actions{display:flex;gap:4px;align-items:center}
-        .mode-bar{display:flex;gap:3px;background:rgba(255,255,255,0.1);border-radius:14px;padding:2px}
-        .mode-btn{padding:4px 10px;border:none;border-radius:12px;background:transparent;color:rgba(255,255,255,0.5);cursor:pointer;font-size:11px;font-family:inherit;transition:all 0.2s}
-        .mode-btn.active{background:rgba(76,175,80,0.3);color:#4CAF50}
-        .lang-btn{padding:3px 7px;border:none;border-radius:10px;background:rgba(0,152,234,0.2);color:#0098EA;cursor:pointer;font-size:11px;font-family:inherit}
-
-        /* === SCORE BAR === */
-        .info-bar{display:flex;justify-content:space-between;gap:8px;flex-shrink:0}
-        .player{
-            flex:1;padding:5px 10px;border-radius:8px;
-            background:rgba(255,255,255,0.08);text-align:center;
-            font-size:12px;line-height:1.3;
+        #hdr button{
+            padding:5px 12px;border:none;border-radius:8px;
+            font-size:12px;cursor:pointer;background:#222;color:#aaa;
+            font-family:inherit;transition:all 0.2s;
         }
-        .player.active{background:rgba(76,175,80,0.2);border:1px solid #4CAF50}
-        .player .lbl{font-size:10px;opacity:0.7}
+        #hdr button.on{background:#FFD700;color:#000}
+        #hdr .lang-btn{
+            padding:5px 8px;background:rgba(0,152,234,0.2);
+            color:#0098EA;font-size:11px;margin-left:auto;
+        }
 
-        /* === BOARD === */
-        #board-wrap{
-            flex:1;min-height:0;
-            display:flex;align-items:center;justify-content:center;
+        /* SCORE */
+        #info{
+            display:flex;justify-content:space-between;
+            padding:5px 12px;font-size:13px;background:#111;flex-shrink:0;
+        }
+        #info .me{color:#FF5722;font-weight:bold}
+        #info .opp{color:#4CAF50;font-weight:bold}
+        #info .lbl{font-size:10px;opacity:0.7;font-weight:normal;display:block}
+
+        /* BOARD - Tam ekran responsive */
+        #game{
+            flex:1;min-height:0;position:relative;overflow:hidden;
+            display:flex;flex-direction:column;justify-content:center;
+            padding:8px;
         }
         #board{
             width:100%;max-width:min(100%, 480px);
-            /* aspect-ratio ile responsive - delik oranini koru */
             aspect-ratio:1/1.05;
+            margin:0 auto;
             background:linear-gradient(135deg,#8B4513,#654321);
             border-radius:14px;padding:6px;
             display:flex;flex-direction:column;justify-content:space-between;
@@ -82,239 +83,275 @@
             border:2px solid #6a4a30;
         }
         .store .count{font-size:18px;font-weight:bold;color:#FFD700}
-        .store .lbl{font-size:8px;opacity:0.6;margin-top:2px}
+        .store .label{font-size:8px;opacity:0.6;margin-top:1px}
 
-        /* === STATUS + BUTTONS === */
-        .footer{flex-shrink:0;display:flex;flex-direction:column;gap:6px}
-        .status{font-size:12px;padding:5px 14px;background:rgba(255,255,255,0.08);border-radius:12px;text-align:center}
-        .btn-row{display:flex;gap:6px;justify-content:center}
-        .btn{padding:7px 16px;font-size:12px;border:none;border-radius:12px;cursor:pointer;font-weight:bold;font-family:inherit}
-        .btn-gold{background:linear-gradient(145deg,#FFD700,#FFA500);color:#1a1a2e}
-        .btn-red{background:linear-gradient(145deg,#f44336,#b71c1c);color:white}
+        /* CONTROLS */
+        #ctl{display:flex;justify-content:center;gap:6px;padding:6px;background:#111;flex-shrink:0}
+        #ctl button{
+            padding:7px 16px;border:none;border-radius:12px;
+            font-size:12px;cursor:pointer;font-weight:bold;
+            font-family:inherit;
+        }
+        #ctl .g{background:#4CAF50;color:#fff}
+        #ctl .r{background:#f44336;color:#fff}
+        #ctl .y{background:#FFD700;color:#000}
 
-        /* === OVERLAY === */
-        .overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:14px}
-        .overlay.show{display:flex}
-        .overlay h2{font-size:22px;text-shadow:0 0 25px gold}
-        .btn-green{background:linear-gradient(145deg,#4CAF50,#2E7D32);color:white;padding:10px 28px;font-size:14px}
+        /* STATUS */
+        #msg{text-align:center;padding:3px;font-size:12px;color:#888;background:#0d2818;flex-shrink:0}
+
+        /* WIN OVERLAY */
+        .win{
+            display:none;position:fixed;inset:0;
+            background:rgba(0,0,0,.85);z-index:50;
+            flex-direction:column;align-items:center;justify-content:center;gap:12px;
+        }
+        .win.show{display:flex}
+        .win h2{font-size:22px;text-shadow:0 0 25px gold;text-align:center;padding:0 20px}
+        .win button{
+            padding:10px 24px;border:none;border-radius:10px;
+            background:#4CAF50;color:#fff;font-size:14px;cursor:pointer;
+            font-family:inherit;
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🌾 <span data-i18n="mangala.title">Mangala</span></h1>
-        <div class="header-actions">
-            <div class="mode-bar">
-                <button class="mode-btn active" id="mAi">🤖 <span data-i18n="mode.ai">AI</span></button>
-                <button class="mode-btn" id="m2p">👥 <span data-i18n="mode.2p">2 Kişi</span></button>
-            </div>
-            <button class="lang-btn" id="langBtn">🌐</button>
+<div id="hdr">
+    <button class="on" id="mAi">🤖 <span data-i18n="mode.ai">AI</span></button>
+    <button id="m2p">👥 <span data-i18n="mode.2p">2 Kişi</span></button>
+    <button class="lang-btn" id="langBtn">🌐</button>
+</div>
+<div id="info">
+    <span id="p1" class="me">⚫ <span data-i18n="player.you">Sen</span><span class="lbl"><span data-i18n="mangala.stores">Depo</span>: <span id="s1">0</span></span></span>
+    <span id="p2" class="opp">⚪ <span data-i18n="player.ai">AI</span><span class="lbl"><span data-i18n="mangala.stores">Depo</span>: <span id="s0">0</span></span></span>
+</div>
+<div id="game">
+    <div id="board">
+        <div class="board-row" style="flex-direction:row-reverse;">
+            <div class="store" id="store1"><div class="count" id="sv1">0</div><div class="label" data-i18n="player.you">Sen</div></div>
+            <div class="row" id="row1"></div>
+        </div>
+        <div class="board-row">
+            <div class="store" id="store0"><div class="count" id="sv0">0</div><div class="label" data-i18n="player.ai">AI</div></div>
+            <div class="row" id="row0"></div>
         </div>
     </div>
-
-    <div class="info-bar">
-        <div class="player" id="p1"><span id="p1n">⚫ <span data-i18n="player.you">Sen</span></span><div class="lbl"><span data-i18n="mangala.stores">Depo</span>: <span id="s1">0</span></div></div>
-        <div class="player active" id="p2"><span id="p2n">⚪ <span data-i18n="player.ai">AI</span></span><div class="lbl"><span data-i18n="mangala.stores">Depo</span>: <span id="s0">0</span></div></div>
-    </div>
-
-    <div id="board-wrap">
-        <div id="board">
-            <div class="board-row" style="flex-direction:row-reverse;">
-                <div class="store" id="store1"><div class="count" id="sv1">0</div><div class="lbl" data-i18n="player.you">Sen</div></div>
-                <div class="row" id="row1"></div>
-            </div>
-            <div class="board-row">
-                <div class="store" id="store0"><div class="count" id="sv0">0</div><div class="lbl" data-i18n="player.ai">AI</div></div>
-                <div class="row" id="row0"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="footer">
-        <div class="status" id="status">⚫ <span data-i18n="mangala.your_pits">Senin sıran</span></div>
-        <div class="btn-row">
-            <button class="btn btn-gold" id="btnNew">🔄 <span data-i18n="btn.new_game">Yeni</span></button>
-            <button class="btn btn-red" id="btnUndo">↩️ <span data-i18n="btn.undo">Geri Al</span></button>
-        </div>
-    </div>
-
-    <div class="overlay" id="overlay">
-        <h2 id="winText"></h2>
-        <button class="btn btn-green" id="btnAgain">🔄 <span data-i18n="btn.retry">Tekrar</span></button>
-    </div>
+</div>
+<div id="msg" data-i18n="mangala.your_pits">Senin sıran</div>
+<div id="ctl">
+    <button class="y" id="bNew">🔄 <span data-i18n="btn.new_game">Yeni</span></button>
+    <button class="r" id="btnUndo">↩️ <span data-i18n="btn.undo">Geri Al</span></button>
+</div>
+<div class="win" id="win"><h2 id="wT"></h2><button id="bR2">🔄 <span data-i18n="btn.retry">Tekrar</span></button></div>
 
 <script>
 (function(){
-var pits=[],stores=[0,0],currentPlayer=1,history=[],gameMode='ai',aiThinking=false;
+'use strict';
 
-function t(k){return (window.i18n && window.i18n.t) ? window.i18n.t(k) : k;}
-
-function updateLabels(){
-    // Oyuncu isimleri
-    var p1n=document.getElementById('p1n');
-    p1n.innerHTML='⚫ <span data-i18n="player.you">'+t('player.you')+'</span>';
-    var p2n=document.getElementById('p2n');
-    p2n.innerHTML='⚪ '+(gameMode==='ai'?'<span data-i18n="player.ai">'+t('player.ai')+'</span>':'<span data-i18n="player.player2">'+t('player.player2')+'</span>');
-    // Store label'lari
-    document.querySelector('#store1 .lbl').innerHTML=t('player.you');
-    document.querySelector('#store0 .lbl').innerHTML=gameMode==='ai'?t('player.ai'):t('player.player2');
+// === i18n helper ===
+function t(k){
+    return (window.i18n && window.i18n.t) ? window.i18n.t(k) : k;
 }
 
+// === Game state ===
+var G={
+    pits:[], stores:[0,0], currentPlayer:1,
+    history:[], gameMode:'ai', aiThinking:false
+};
+
 function initGame(){
-    pits=[[4,4,4,4,4,4],[4,4,4,4,4,4]];
-    stores=[0,0];currentPlayer=1;history=[];aiThinking=false;
-    document.getElementById('overlay').classList.remove('show');
+    G.pits=[[4,4,4,4,4,4],[4,4,4,4,4,4]];
+    G.stores=[0,0];G.currentPlayer=1;G.history=[];G.aiThinking=false;
+    document.getElementById('win').classList.remove('show');
     render();
-    updateStatus('⚫ '+t('mangala.your_pits'));
-    if(currentPlayer===0&&gameMode==='ai')runAI();
+    updateMsg(t('mangala.your_pits'));
+    if(G.currentPlayer===0 && G.gameMode==='ai') runAI();
 }
 
 function saveState(){
-    history.push({pits:[pits[0].slice(),pits[1].slice()],stores:stores.slice(),player:currentPlayer});
-    if(history.length>30)history.shift();
+    G.history.push({
+        pits:[G.pits[0].slice(),G.pits[1].slice()],
+        stores:G.stores.slice(),
+        player:G.currentPlayer
+    });
+    if(G.history.length>30) G.history.shift();
 }
 
 function render(){
     var r0=document.getElementById('row0'),r1=document.getElementById('row1');
     r0.innerHTML='';r1.innerHTML='';
-    for(var i=5;i>=0;i--)r1.appendChild(createPit(1,i));
-    for(var i=0;i<6;i++)r0.appendChild(createPit(0,i));
-    document.getElementById('sv0').textContent=stores[0];
-    document.getElementById('sv1').textContent=stores[1];
-    document.getElementById('s0').textContent=stores[0];
-    document.getElementById('s1').textContent=stores[1];
-    document.getElementById('p1').classList.toggle('active',currentPlayer===1);
-    document.getElementById('p2').classList.toggle('active',currentPlayer===0);
+    for(var i=5;i>=0;i--) r1.appendChild(createPit(1,i));
+    for(var i=0;i<6;i++) r0.appendChild(createPit(0,i));
+    document.getElementById('sv0').textContent=G.stores[0];
+    document.getElementById('sv1').textContent=G.stores[1];
+    document.getElementById('s0').textContent=G.stores[0];
+    document.getElementById('s1').textContent=G.stores[1];
 }
 
 function createPit(player,index){
-    var el=document.createElement('div');el.className='pit';
-    if(player!==currentPlayer||aiThinking||pits[player][index]===0){
+    var el=document.createElement('div');
+    el.className='pit';
+    if(player!==G.currentPlayer || G.aiThinking || G.pits[player][index]===0){
         el.classList.add('disabled');
     }
-    el.innerHTML='<div class="count">'+pits[player][index]+'</div>';
-    (function(p,i){el.addEventListener('click',function(e){e.preventDefault();onPitClick(p,i);});})(player,index);
+    el.innerHTML='<div class="count">'+G.pits[player][index]+'</div>';
+    (function(p,i){
+        el.addEventListener('click',function(e){e.preventDefault();onPitClick(p,i);});
+    })(player,index);
     return el;
 }
 
 function onPitClick(player,index){
-    if(player!==currentPlayer||aiThinking)return;
-    if(pits[player][index]===0)return;
+    if(player!==G.currentPlayer || G.aiThinking) return;
+    if(G.pits[player][index]===0) return;
     saveState();
     doMove(player,index);
     render();
-    if(checkWin())return;
-    if(currentPlayer===0&&gameMode==='ai')runAI();
+    if(checkWin()) return;
+    if(G.currentPlayer===0 && G.gameMode==='ai') runAI();
 }
 
 function doMove(player,index){
-    var count=pits[player][index];pits[player][index]=0;
-    var cur=index,row=player;
-    for(var s=0;s<count;s++){
+    var count=G.pits[player][index];
+    G.pits[player][index]=0;
+    var cur=index, row=player;
+    for(var s=0; s<count; s++){
         cur++;
         if(cur>=6){
-            if(row===player&&cur===6){stores[player]++;cur=-1;row=row===0?1:0;continue;}
-            row=row===0?1:0;cur=0;
+            if(row===player && cur===6){ G.stores[player]++; cur=-1; row=row===0?1:0; continue; }
+            row=row===0?1:0; cur=0;
         }
-        pits[row][cur]++;
+        G.pits[row][cur]++;
     }
-    if(row===player&&pits[row][cur]===1&&cur>=0&&cur<6){
+    // Son tas kendi deligine -> yakala
+    if(row===player && G.pits[row][cur]===1 && cur>=0 && cur<6){
         var opp=5-cur;
-        if(pits[player][opp]>0){
-            var captured=pits[player][opp]+1;
-            pits[player][opp]=0;pits[player][cur]=0;
-            stores[player]+=captured;
+        if(G.pits[player][opp]>0){
+            var captured=G.pits[player][opp]+1;
+            G.pits[player][opp]=0; G.pits[player][cur]=0;
+            G.stores[player]+=captured;
         }
     }
 }
 
 function checkWin(){
     var t0=0,t1=0;
-    for(var i=0;i<6;i++){t0+=pits[0][i];t1+=pits[1][i];}
-    if(t0===0||t1===0){
-        stores[0]+=t0;stores[1]+=t1;
-        for(var i=0;i<6;i++){pits[0][i]=0;pits[1][i]=0;}
+    for(var i=0;i<6;i++){ t0+=G.pits[0][i]; t1+=G.pits[1][i]; }
+    if(t0===0 || t1===0){
+        G.stores[0]+=t0; G.stores[1]+=t1;
+        for(var i=0;i<6;i++){ G.pits[0][i]=0; G.pits[1][i]=0; }
         render();
         var winner;
-        if(stores[1]>stores[0]) winner='⚫ '+t('player.you')+' '+t('msg.you_won');
-        else if(stores[0]>stores[1]) winner='⚪ '+t('player.ai')+' '+t('msg.you_won');
+        if(G.stores[1]>G.stores[0]) winner='⚫ '+t('player.you')+' '+t('msg.you_won');
+        else if(G.stores[0]>G.stores[1]) winner='⚪ '+t('player.ai')+' '+t('msg.you_won');
         else winner=t('msg.draw');
-        document.getElementById('winText').textContent='🏆 '+winner+' ('+stores[1]+'-'+stores[0]+')';
-        document.getElementById('overlay').classList.add('show');
+        document.getElementById('wT').textContent='🏆 '+winner+' ('+G.stores[1]+'-'+G.stores[0]+')';
+        document.getElementById('win').classList.add('show');
         return true;
     }
     return false;
 }
 
 function undoMove(){
-    if(history.length===0||aiThinking)return;
-    var prev=history.pop();
-    pits=[prev.pits[0].slice(),prev.pits[1].slice()];
-    stores=prev.stores.slice();currentPlayer=prev.player;
+    if(G.history.length===0 || G.aiThinking) return;
+    var prev=G.history.pop();
+    G.pits=[prev.pits[0].slice(),prev.pits[1].slice()];
+    G.stores=prev.stores.slice();
+    G.currentPlayer=prev.player;
     render();
-    updateStatus('↩️ '+(currentPlayer===1?'⚫ '+t('mangala.your_pits'):'⚪ '+t('dama.turn_ai')));
-    if(currentPlayer===0&&gameMode==='ai')runAI();
+    if(G.currentPlayer===1) updateMsg(t('mangala.your_pits'));
+    else if(G.gameMode==='ai') updateMsg(t('dama.turn_ai'));
+    else updateMsg(t('msg.opp_turn'));
+    if(G.currentPlayer===0 && G.gameMode==='ai') runAI();
 }
 
-function updateStatus(msg){
-    if(typeof msg==='string'){
-        document.getElementById('status').innerHTML=msg;
-    } else {
-        // Eğer msg obje olarak gelirse (i18n key + sembol)
-        document.getElementById('status').innerHTML=msg.html;
-    }
+function updateMsg(msg){
+    document.getElementById('msg').textContent=msg;
 }
 
-// AI
+// === AI ===
 function runAI(){
-    aiThinking=true;
-    updateStatus({html:'⚪ '+t('dama.turn_ai')});
-    setTimeout(function(){aiDecide();},600);
+    G.aiThinking=true;
+    updateMsg('⚪ '+t('dama.turn_ai'));
+    setTimeout(function(){ aiDecide(); }, 600);
 }
 
 function aiDecide(){
-    var best=-1,bestScore=-99;
-    for(var i=0;i<6;i++){
-        if(pits[0][i]===0)continue;
-        var sc=0,count=pits[0][i];
-        var testPits=[pits[0].slice(),pits[1].slice()];var testStores=stores.slice();
-        var cur=i,row=0;
-        for(var s=0;s<count;s++){cur++;if(cur>=6){if(row===0&&cur===6){testStores[0]++;cur=-1;row=1;continue;}row=1-row;cur=0;}testPits[row][cur]++;}
-        if(row===0&&testPits[0][cur]===1&&cur>=0&&cur<6){
-            var opp=5-cur;
-            if(testPits[0][opp]>0)sc+=testPits[0][opp]+1;
+    var best=-1, bestScore=-99;
+    for(var i=0; i<6; i++){
+        if(G.pits[0][i]===0) continue;
+        var sc=0, count=G.pits[0][i];
+        var tp=[G.pits[0].slice(),G.pits[1].slice()];
+        var ts=G.stores.slice();
+        var cur=i, row=0;
+        for(var s=0; s<count; s++){
+            cur++;
+            if(cur>=6){
+                if(row===0 && cur===6){ ts[0]++; cur=-1; row=1; continue; }
+                row=1-row; cur=0;
+            }
+            tp[row][cur]++;
         }
-        if(cur===6||row===0)sc+=3;
-        sc+=pits[0][i]*0.2;
-        if(i>=4)sc+=2;
-        if(sc>bestScore){bestScore=sc;best=i;}
+        if(row===0 && tp[0][cur]===1 && cur>=0 && cur<6){
+            var opp=5-cur;
+            if(tp[0][opp]>0) sc+=tp[0][opp]+1;
+        }
+        if(cur===6 || row===0) sc+=3;
+        sc+=G.pits[0][i]*0.2;
+        if(i>=4) sc+=2;
+        if(sc>bestScore){ bestScore=sc; best=i; }
     }
     if(best>=0){
-        saveState();doMove(0,best);render();
-        if(!checkWin()){currentPlayer=1;aiThinking=false;updateStatus({html:'⚫ '+t('mangala.your_pits')});}
-        else aiThinking=false;
-    }else{
-        currentPlayer=1;aiThinking=false;updateStatus({html:'⚫ '+t('mangala.your_pits')});
+        saveState();
+        doMove(0,best);
+        render();
+        if(!checkWin()){
+            G.currentPlayer=1; G.aiThinking=false;
+            updateMsg(t('mangala.your_pits'));
+        } else {
+            G.aiThinking=false;
+        }
+    } else {
+        G.currentPlayer=1; G.aiThinking=false;
+        updateMsg(t('mangala.your_pits'));
     }
 }
 
-// Butonlar
-document.getElementById('btnNew').addEventListener('click',initGame);
-document.getElementById('btnAgain').addEventListener('click',initGame);
+// === UI binding ===
+function updateLabels(){
+    var p1=document.getElementById('p1');
+    p1.innerHTML='⚫ <span data-i18n="player.you">'+t('player.you')+'</span><span class="lbl"><span data-i18n="mangala.stores">'+t('mangala.stores')+'</span>: <span id="s1">'+G.stores[1]+'</span></span>';
+    var p2=document.getElementById('p2');
+    var oppName = G.gameMode==='ai' ? t('player.ai') : t('player.player2');
+    p2.innerHTML='⚪ '+oppName+'<span class="lbl"><span data-i18n="mangala.stores">'+t('mangala.stores')+'</span>: <span id="s0">'+G.stores[0]+'</span></span>';
+    document.querySelector('#store1 .label').textContent=t('player.you');
+    document.querySelector('#store0 .label').textContent=oppName;
+}
+
+document.getElementById('mAi').addEventListener('click',function(){
+    G.gameMode='ai'; this.classList.add('on');
+    document.getElementById('m2p').classList.remove('on');
+    updateLabels(); initGame();
+});
+document.getElementById('m2p').addEventListener('click',function(){
+    G.gameMode='2p'; this.classList.add('on');
+    document.getElementById('mAi').classList.remove('on');
+    updateLabels(); initGame();
+});
+document.getElementById('bNew').addEventListener('click',initGame);
+document.getElementById('bR2').addEventListener('click',initGame);
 document.getElementById('btnUndo').addEventListener('click',undoMove);
-document.getElementById('mAi').addEventListener('click',function(){gameMode='ai';document.getElementById('mAi').classList.add('active');document.getElementById('m2p').classList.remove('active');updateLabels();initGame();});
-document.getElementById('m2p').addEventListener('click',function(){gameMode='2p';document.getElementById('m2p').classList.add('active');document.getElementById('mAi').classList.remove('active');updateLabels();initGame();});
 
 document.getElementById('langBtn').addEventListener('click',function(){
     var cur=(window.i18n && window.i18n.getLocale()) || 'tr';
     window.i18n.setLocale(cur==='tr'?'en':'tr');
     updateLabels();
-    if(aiThinking) updateStatus({html:'⚪ '+t('dama.turn_ai')});
-    else if(currentPlayer===1) updateStatus({html:'⚫ '+t('mangala.your_pits')});
+    if(G.aiThinking) updateMsg('⚪ '+t('dama.turn_ai'));
+    else if(G.currentPlayer===1) updateMsg(t('mangala.your_pits'));
 });
 window.addEventListener('tonton:localechange', function(){
     updateLabels();
-    if(aiThinking) updateStatus({html:'⚪ '+t('dama.turn_ai')});
-    else if(currentPlayer===1) updateStatus({html:'⚫ '+t('mangala.your_pits')});
+    if(G.aiThinking) updateMsg('⚪ '+t('dama.turn_ai'));
+    else if(G.currentPlayer===1) updateMsg(t('mangala.your_pits'));
 });
 
 updateLabels();
