@@ -10,7 +10,7 @@
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             min-height: 100vh; display: flex; flex-direction: column;
             align-items: center; font-family: 'Segoe UI', sans-serif;
-            color: white; padding: 20px; gap: 20px;
+            color: white; padding: 60px 20px 20px; gap: 20px;
         }
         h1 { font-size: 32px; text-shadow: 0 0 30px rgba(255,215,0,0.5); margin-top: 20px; }
         .subtitle { font-size: 14px; opacity: 0.6; }
@@ -92,5 +92,47 @@
     </div>
 
     <p style="margin-top:20px;opacity:0.3;font-size:12px;">Tonton Game v1.0 - Telegram Mini App</p>
+
+    <div id="wallet-bar" style="position:fixed;top:0;left:0;right:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);padding:8px 12px;display:flex;justify-content:space-between;align-items:center;z-index:100;">
+        <span style="font-size:12px;opacity:0.7;">TON Wallet</span>
+        <button id="wallet-btn" style="background:linear-gradient(90deg,#0098EA,#0070a8);color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">Cuzdan Bagla</button>
+        <span id="wallet-balance" style="font-size:11px;opacity:0;color:#FFD700;"></span>
+    </div>
+
+    <script src="tonconnect-ui.min.js"></script>
+    <script src="ton-wallet.js"></script>
+    <script>
+    (function(){
+        var btn = document.getElementById('wallet-btn');
+        var bal = document.getElementById('wallet-balance');
+
+        // TontonWallet.init() otomatik TonConnectUI olusturur
+        // Wallet zaten bagliysa adresi goster
+        try {
+            if (window.TonConnectUI) {
+                var ui = new TonConnectUI({
+                    manifestUrl: 'https://resitkurttr.github.io/dama-game/tonconnect-manifest.json'
+                });
+                ui.onStatusChange(function(w){
+                    if (w) {
+                        var addr = w.account.address;
+                        var short = addr.slice(0,6) + '...' + addr.slice(-4);
+                        btn.textContent = short;
+                        btn.style.background = '#10b981';
+                    } else {
+                        btn.textContent = 'Cuzdan Bagla';
+                        btn.style.background = 'linear-gradient(90deg,#0098EA,#0070a8)';
+                        bal.style.opacity = '0';
+                    }
+                });
+                btn.onclick = function(){
+                    if (ui.connected) ui.disconnect();
+                    else ui.openModal();
+                };
+                window._tontonUI = ui;
+            }
+        } catch(e) { console.warn('TON init:', e); }
+    })();
+    </script>
 </body>
 </html>
