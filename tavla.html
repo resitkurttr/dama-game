@@ -2,457 +2,789 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#1a1a2e">
 <title>🎲 Tavla</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;overflow:hidden;background:#1a0e08;font-family:sans-serif;color:#fff}
-body{display:flex;flex-direction:column}
-#hdr{display:flex;justify-content:center;gap:4px;padding:5px;background:#111;flex-shrink:0}
-#hdr button{padding:4px 10px;border:none;border-radius:8px;font-size:11px;cursor:pointer;background:#222;color:#aaa}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#1a1a2e;font-family:'Segoe UI',sans-serif;color:#fff}
+body{display:flex;flex-direction:column;user-select:none;padding-top:max(4px,env(safe-area-inset-top));padding-bottom:max(4px,env(safe-area-inset-bottom))}
+
+/* HEADER */
+#hdr{display:flex;justify-content:center;gap:6px;padding:5px;background:#111;flex-shrink:0;align-items:center}
+#hdr button{padding:5px 12px;border:none;border-radius:8px;font-size:12px;cursor:pointer;background:#222;color:#aaa;font-family:inherit;transition:all .2s}
 #hdr button.on{background:#FFD700;color:#000}
-#info{display:flex;justify-content:space-between;padding:3px 10px;font-size:11px;background:#111;flex-shrink:0}
-#info .on{color:#FFD700;font-weight:bold}
-#game{flex:1;position:relative;overflow:hidden;min-height:0}
+#hdr .lang-btn{padding:5px 8px;background:rgba(0,152,234,0.2);color:#0098EA;font-size:11px;margin-left:auto}
+
+/* SCORE */
+#scr{display:flex;justify-content:center;gap:12px;padding:4px 8px;background:#111;flex-shrink:0;font-size:13px;font-weight:bold}
+#scr span{padding:2px 12px;border-radius:6px;background:#1a1a2e;transition:opacity .3s}
+#scr .me{color:#FF5722}
+#scr .opp{color:#4CAF50}
+
+/* GAME CANVAS */
+#game{flex:1;min-height:0;position:relative;overflow:hidden}
 #game canvas{display:block;width:100%;height:100%}
-#ctl{display:flex;justify-content:center;gap:6px;padding:6px;background:#111;flex-shrink:0}
-#ctl button{padding:6px 14px;border:none;border-radius:8px;font-size:12px;cursor:pointer}
-#ctl .g{background:#4CAF50;color:#fff}
-#ctl .r{background:#e53935;color:#fff}
-#ctl .y{background:#FFC107;color:#000}
-#dice{display:flex;justify-content:center;gap:8px;padding:4px;flex-shrink:0;background:#111}
-.die{width:36px;height:36px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;color:#333}
-.die.off{opacity:.3}
-#msg{text-align:center;padding:2px;font-size:11px;color:#888;background:#0a0a0a;flex-shrink:0}
-.win{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:50;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+
+/* CONTROLS */
+#ctl{display:flex;justify-content:center;gap:8px;padding:6px;background:#111;flex-shrink:0}
+#ctl button{min-width:80px;height:42px;border:none;border-radius:10px;font-size:14px;cursor:pointer;font-family:inherit;font-weight:bold;transition:all .2s}
+#ctl .bd{background:#FFD700;color:#000;flex:1;max-width:200px}
+#ctl .bd:disabled{background:#555;color:#888;cursor:not-allowed}
+#ctl .br{background:#4CAF50;color:#fff;flex:0;min-width:60px}
+
+/* STATUS / MSG */
+#status{text-align:center;padding:3px;font-size:12px;color:#4CAF50;background:#111;flex-shrink:0}
+#msg{text-align:center;padding:2px;font-size:11px;color:#888;background:#0a0a1a;flex-shrink:0}
+
+/* WIN OVERLAY */
+.win{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:50;flex-direction:column;align-items:center;justify-content:center;gap:14px}
 .win.show{display:flex}
-.win h2{font-size:20px}
-.win button{padding:10px 20px;border:none;border-radius:10px;background:#4CAF50;color:#fff;font-size:14px;cursor:pointer}
+.win h2{font-size:22px;text-shadow:0 0 25px gold;text-align:center;padding:0 20px}
+.win .stats{font-size:13px;color:#ccc;text-align:center}
+.win button{padding:10px 28px;border:none;border-radius:10px;background:#4CAF50;color:#fff;font-size:14px;cursor:pointer;font-family:inherit}
 </style>
 </head>
 <body>
 <div id="hdr">
-  <button class="on" id="mAi">🤖 AI</button>
-  <button id="m2p">👥 2 Kişi</button>
+  <button class="on">🤖 <span id="lblAI">AI</span></button>
+  <button class="lang-btn" id="langBtn">🌐</button>
 </div>
-<div id="info"><span id="n1" class="on">⚫ Sen (0)</span><span id="n2">⚪ Rakip (0)</span></div>
+<div id="scr">
+  <span class="me" id="sMe">🔴 Sen: 15</span>
+  <span class="opp" id="sOpp">🟢 AI: 15</span>
+</div>
 <div id="game"></div>
-<div id="dice"><div class="die" id="d1">?</div><div class="die" id="d2">?</div></div>
-<div id="msg">🎲 Zar at!</div>
 <div id="ctl">
-  <button class="y" id="bRoll">🎲 Zar At</button>
-  <button class="g" id="bPass">⏭️ Pas</button>
-  <button class="r" id="bNew">🔄 Yeni</button>
+  <button class="bd" id="bR">🎲 Zar At</button>
+  <button class="br" id="bNew">🔄</button>
 </div>
-<div class="win" id="win"><h2 id="wT"></h2><button id="bR">🔄 Tekrar</button></div>
+<div id="status">AI modu — Zar atarak başla</div>
+<div id="msg">Tavla oynamaya hazır</div>
+<div class="win" id="win">
+  <h2 id="wT"></h2>
+  <div class="stats" id="wS"></div>
+  <button id="bR2">🔄 Tekrar</button>
+</div>
 
 <script>
-// ═══════════════════════════════════════
-//  TAVLA — Canvas Backgammon
-// ═══════════════════════════════════════
-var cvs,cx,W,H;
-var pts=[],cur=0,dice=[0,0],used=[false,false],sel=-1,rolled=false,mode='ai',aiTurn=false;
-var borne=[0,0]; // borne off counts
+(function(){
+'use strict';
 
-function init(){
-  pts=[];
-  for(var i=0;i<26;i++){pts.push(0);pts.push(0);}
-  // Standard backgammon setup
-  // Player 0 (white/bottom): 2@24, 5@13, 3@8, 5@6
-  // Player 1 (black/top): 2@1, 5@12, 3@17, 5@19
-  setP(0,24,2);setP(0,13,5);setP(0,8,3);setP(0,6,5);
-  setP(1,1,2);setP(1,12,5);setP(1,17,3);setP(1,19,5);
-  cur=Math.random()>0.5?1:0;
-  dice=[0,0];used=[false,false];sel=-1;rolled=false;borne=[0,0];
-  aiTurn=false;
-  updDice();
-  updInfo();
-  setMsg('🎲 Zar at!');
-  document.getElementById('win').classList.remove('show');
-  if(cur===1&&mode==='ai')setTimeout(aiRoll,500);
+// ════════════════════════════════════════════════
+//  TAVLA — Turkish Backgammon AI
+//  Single-player, self-contained, Telegram Mini App
+// ════════════════════════════════════════════════
+
+// ── Layout helpers ──
+var TOP_PTS = [24,23,22,21,20,19,18,17,16,15,14,13];
+var BOT_PTS = [1,2,3,4,5,6,7,8,9,10,11,12];
+
+// ── i18n ──
+var LANG = 'tr';
+var I18N = {
+  tr: {
+    rollDice: '🎲 Zar At',
+    yourTurn: 'Sıran',
+    oppTurn: 'AI düşünüyor...',
+    noMove: 'Geçerli hamle yok — Otomatik geç',
+    p1win: 'Kırmızı Kazandı!',
+    p2win: 'Yeşil Kazandı!',
+    doubles: 'İkili! 4 hamle hakkı',
+    moveHint: 'Taşı seç, sonra hedefe dokun',
+    you: 'Sen',
+    ai: 'AI',
+    statusStart: 'AI modu — Zar atarak başla',
+    ready: 'Tavla oynamaya hazır',
+    newGame: 'Yeni Oyun',
+    retry: 'Tekrar',
+    langLabel: 'Dil'
+  },
+  en: {
+    rollDice: '🎲 Roll Dice',
+    yourTurn: 'Your turn',
+    oppTurn: 'AI thinking...',
+    noMove: 'No valid moves — Auto skip',
+    p1win: 'Red Won!',
+    p2win: 'Green Won!',
+    doubles: 'Doubles! 4 moves',
+    moveHint: 'Select piece, then tap destination',
+    you: 'You',
+    ai: 'AI',
+    statusStart: 'AI mode — Roll to start',
+    ready: 'Ready to play Tavla',
+    newGame: 'New Game',
+    retry: 'Retry',
+    langLabel: 'Language'
+  }
+};
+
+function t(key) { return (I18N[LANG] && I18N[LANG][key]) || I18N.tr[key] || key; }
+
+function detectLang() {
+  try {
+    var saved = localStorage.getItem('tonton-lang');
+    if (saved && I18N[saved]) return saved;
+  } catch(e) {}
+  try {
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
+      var user = window.Telegram.WebApp.initDataUnsafe.user;
+      if (user && user.language_code) {
+        var lang = user.language_code.toLowerCase().split('-')[0];
+        if (I18N[lang]) return lang;
+      }
+    }
+  } catch(e) {}
+  try {
+    var nav = (navigator.language || 'en').toLowerCase().split('-')[0];
+    if (I18N[nav]) return nav;
+  } catch(e) {}
+  return 'tr';
 }
 
-function setP(p,i,v){pts[p*26+i]=v;}
-function getP(p,i){return pts[p*26+i];}
+// ── Game State ──
+var G = {
+  board: [],          // board[0]=P1 bar, board[1..24]=points, board[25]=P2 bar
+  borneOff: [0, 0],   // [P1, P2]
+  currentPlayer: 1,
+  dice: [],
+  usedDice: [],
+  diceRolled: false,
+  selectedPoint: null,
+  validDests: [],
+  phase: 'roll',      // 'roll', 'move', 'ended'
+  aiThinking: false,
+  cvs: null,
+  cx: null,
+  layout: null,
+  gameCount: 0
+};
 
-function setupCanvas(){
-  var box=document.getElementById('game');
-  if(cvs){box.removeChild(cvs);}
-  cvs=document.createElement('canvas');
-  box.appendChild(cvs);
-  cx=cvs.getContext('2d');
-  W=box.clientWidth;H=box.clientHeight;
-  cvs.width=W;cvs.height=H;
+// ═══ INITIALIZATION ═══
+
+function init() {
+  LANG = detectLang();
+  var box = document.getElementById('game');
+  G.cvs = document.createElement('canvas');
+  box.appendChild(G.cvs);
+  G.cx = G.cvs.getContext('2d');
+  resizeCanvas();
+  initBoard();
+  calcLayout();
+  render();
+  bindUI();
+  updateUILabels();
 }
 
-// ═══ DRAWING ═══
-function draw(){
-  cx.fillStyle='#3d2817';cx.fillRect(0,0,W,H);
-  // Board border
-  cx.fillStyle='#654321';
-  cx.fillRect(2,2,W-4,H-4);
-  cx.fillStyle='#4a3525';
-  cx.fillRect(W/2-6,2,12,H-4);
+function resizeCanvas() {
+  var box = document.getElementById('game');
+  var dpr = window.devicePixelRatio || 1;
+  var w = box.clientWidth;
+  var h = box.clientHeight;
+  G.cvs.width = w * dpr;
+  G.cvs.height = h * dpr;
+  G.cvs.style.width = w + 'px';
+  G.cvs.style.height = h + 'px';
+  G.cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  G.layout = null;
+  calcLayout();
+  render();
+}
 
-  var boardL=6,boardR=W-6,boardT=6,boardB=H-6;
-  var midX=W/2;
-  var ptW=(midX-12)/6;
-  var topH=(boardB-boardT)/2-4;
-  var gap=4;
+function initBoard() {
+  G.board = new Array(26);
+  for (var i = 0; i < 26; i++) G.board[i] = 0;
+  // Player 1 (you, red): 2 on 24, 5 on 13, 3 on 8, 5 on 6
+  G.board[24] = 2;
+  G.board[13] = 5;
+  G.board[8] = 3;
+  G.board[6] = 5;
+  // Player 2 (AI, green): 2 on 1, 5 on 12, 3 on 17, 5 on 19
+  G.board[1] = -2;
+  G.board[12] = -5;
+  G.board[17] = -3;
+  G.board[19] = -5;
+  G.borneOff = [0, 0];
+  G.currentPlayer = 1;
+  G.dice = [];
+  G.usedDice = [];
+  G.diceRolled = false;
+  G.selectedPoint = null;
+  G.validDests = [];
+  G.phase = 'roll';
+  G.gameCount++;
+}
 
-  // Draw 24 triangles
-  for(var i=1;i<=24;i++){
-    var col,tx;
-    if(i<=12){
-      tx=boardR-(i-1)*ptW;
-    }else{
-      tx=boardL+(i-13)*ptW;
-    }
-    var isTop=i>=13;
-    col=(i%2===0)?'#c0392b':'#ecf0f1';
+function calcLayout() {
+  var box = document.getElementById('game');
+  var W = box.clientWidth, H = box.clientHeight;
+  var pad = 4;
+  var barW = Math.max(16, Math.round(W * 0.06));
+  var usableW = W - 2 * pad - barW;
+  var ptW = usableW / 12;
+  var halfH = H / 2;
+  var barGap = 6;
+  var triH = halfH - pad - barGap / 2;
+  var pieceR = Math.min(ptW * 0.38, 12);
+  var pieceSpacing = pieceR * 2 - 2;
+  var barX = pad + 6 * ptW;
 
-    cx.fillStyle=col;
-    cx.beginPath();
-    if(isTop){
-      cx.moveTo(tx,boardT);
-      cx.lineTo(tx+ptW/2,boardT+topH);
-      cx.lineTo(tx-ptW/2,boardT+topH);
-    }else{
-      cx.moveTo(tx,boardB);
-      cx.lineTo(tx+ptW/2,boardB-topH);
-      cx.lineTo(tx-ptW/2,boardB-topH);
-    }
-    cx.closePath();cx.fill();
+  var points = {};
+  for (var i = 0; i < 12; i++) {
+    var x = pad + i * ptW + ptW / 2;
+    if (i >= 6) x += barW;
+
+    var tp = TOP_PTS[i];
+    points[tp] = { x: x, row: 'top', col: i, triY: pad, triH: triH, pieceStartY: pad + pieceR + 2 };
+    var bp = BOT_PTS[i];
+    points[bp] = { x: x, row: 'bot', col: i, triY: H - pad - triH, triH: triH, pieceStartY: H - pad - pieceR - 2 };
+  }
+
+  G.layout = { W: W, H: H, pad: pad, barW: barW, barX: barX, ptW: ptW, triH: triH, pieceR: pieceR, pieceSpacing: pieceSpacing, points: points };
+}
+
+// ═══ RENDERING ═══
+
+function render() {
+  if (!G.layout) return;
+  var L = G.layout, cx = G.cx, W = L.W, H = L.H;
+
+  // Clear
+  cx.fillStyle = '#1a1a2e';
+  cx.fillRect(0, 0, W, H);
+
+  // Board background
+  cx.fillStyle = '#2C1810';
+  cx.fillRect(L.pad, L.pad, W - 2 * L.pad, H - 2 * L.pad);
+  cx.strokeStyle = '#5C3A20';
+  cx.lineWidth = 2;
+  cx.strokeRect(L.pad, L.pad, W - 2 * L.pad, H - 2 * L.pad);
+
+  // Triangles + pieces
+  for (var i = 0; i < 12; i++) {
+    var topPt = TOP_PTS[i], botPt = BOT_PTS[i];
+    var topPos = L.points[topPt], botPos = L.points[botPt];
+    var tc1 = (i % 2 === 0) ? '#8B4513' : '#CD853F';
+    var tc2 = (i % 2 === 0) ? '#CD853F' : '#8B4513';
+    drawTriangle(cx, topPos.x - L.ptW/2+1, L.pad, L.ptW-2, L.triH, 'down', tc1);
+    drawTriangle(cx, botPos.x - L.ptW/2+1, H-L.pad-L.triH, L.ptW-2, L.triH, 'up', tc2);
 
     // Point numbers
-    cx.fillStyle='rgba(255,255,255,0.25)';
-    cx.font='7px sans-serif';cx.textAlign='center';
-    cx.fillText(String(i),tx,isTop?boardT-2:boardB+9);
+    cx.fillStyle = 'rgba(255,255,255,0.3)';
+    cx.font = '9px sans-serif';
+    cx.textAlign = 'center';
+    cx.textBaseline = 'middle';
+    cx.fillText(topPt, topPos.x, L.pad + 8);
+    cx.fillText(botPt, botPos.x, H - L.pad - 8);
+
+    drawPiecesOnPoint(cx, topPt, topPos);
+    drawPiecesOnPoint(cx, botPt, botPos);
   }
 
-  // Draw pieces
-  for(var i=1;i<=24;i++){
-    var tx2;
-    if(i<=12){tx2=boardR-(i-1)*ptW;}
-    else{tx2=boardL+(i-13)*ptW;}
-    var isTop2=i>=13;
-    drawPieces(i,tx2,isTop2,ptW);
-  }
+  // Bar
+  cx.fillStyle = '#2C1810';
+  cx.fillRect(L.barX, L.pad, L.barW, H - 2 * L.pad);
+  cx.strokeStyle = '#5C3A20';
+  cx.lineWidth = 1;
+  cx.strokeRect(L.barX, L.pad, L.barW, H - 2 * L.pad);
+  cx.fillStyle = '#1a1a2e';
+  cx.fillRect(L.barX, H/2-1, L.barW, 2);
 
-  // Bar pieces
-  drawBarPieces();
-
-  // Borne off
-  drawBorne(0,midX+ptW*3,boardB-10);
-  drawBorne(1,midX-ptW*3,boardT+10);
-
-  // Selection highlight
-  if(sel>0){
-    var sx;
-    if(sel<=12){sx=boardR-(sel-1)*ptW;}
-    else{sx=boardL+(sel-13)*ptW;}
-    cx.strokeStyle='#FFD700';cx.lineWidth=3;
-    var sy=sel>=13?boardT:boardB-topH*2;
-    cx.strokeRect(sx-ptW/2,sy,ptW,topH*2);
-  }
-
-  // Current player indicator
-  cx.fillStyle=cur===0?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.3)';
-  if(cur===0){cx.fillRect(2,boardB-topH-10,W-4,12);}
-  else{cx.fillRect(2,boardT-2,W-4,12);}
+  drawBarPieces(cx);
+  drawBorneOff(cx);
+  drawDice(cx);
+  drawHighlights(cx);
+  drawSelection(cx);
+  updateScore();
 }
 
-function drawPieces(point,px,isTop,ptW){
-  var c0=getP(0,point),c1=getP(1,point);
-  var total=c0+c1;
-  if(total===0)return;
-  var colors=['#f0e6d0','#1a1a1a'];
-  var strokes=['#c4a882','#444'];
-  var boardB2=H-6,boardT2=6;
-  var topH2=(boardB2-boardT2)/2-4;
-  var maxShow=Math.min(total,6);
+function drawTriangle(cx, x, y, w, h, dir, color) {
+  cx.fillStyle = color;
+  cx.beginPath();
+  if (dir === 'down') { cx.moveTo(x,y); cx.lineTo(x+w,y); cx.lineTo(x+w/2,y+h); }
+  else { cx.moveTo(x,y+h); cx.lineTo(x+w,y+h); cx.lineTo(x+w/2,y); }
+  cx.closePath(); cx.fill();
+}
 
-  for(var j=0;j<maxShow;j++){
-    var pColor=c0>0?colors[0]:colors[1];
-    var pStroke=c0>0?strokes[0]:strokes[1];
-    var py;
-    if(isTop){
-      py=boardT2+10+j*13;
-    }else{
-      py=boardB2-10-j*13;
+function drawPiecesOnPoint(cx, pointNum, pos) {
+  var val = G.board[pointNum];
+  if (val === 0) return;
+  var count = Math.abs(val), player = val > 0 ? 1 : 2, L = G.layout;
+
+  var isSelected = (G.selectedPoint === pointNum);
+  var isMovable = false;
+  if (G.selectedPoint !== null && G.validDests) {
+    for (var d = 0; d < G.validDests.length; d++) {
+      if (G.validDests[d].point === pointNum) isMovable = true;
     }
-    cx.fillStyle=pColor;cx.strokeStyle=pStroke;cx.lineWidth=1;
-    cx.beginPath();cx.arc(px,py,5.5,0,Math.PI*2);cx.fill();cx.stroke();
   }
-  if(total>6){
-    cx.fillStyle='#FFD700';cx.font='bold 8px sans-serif';cx.textAlign='center';
-    cx.fillText(String(total),px,isTop?boardT2+10+6*13+2:boardB2-10-6*13-2);
+
+  // Destination highlight
+  if (isMovable && G.selectedPoint !== pointNum) {
+    cx.fillStyle = 'rgba(255,215,0,0.25)';
+    cx.fillRect(pos.x - L.ptW/2+1, pos.triY, L.ptW-2, pos.triH);
+  }
+
+  var maxShow = Math.min(count, 5);
+  for (var i = 0; i < maxShow; i++) {
+    var py = pos.row === 'top' ? pos.pieceStartY + i * L.pieceSpacing : pos.pieceStartY - i * L.pieceSpacing;
+    drawPiece(cx, pos.x, py, L.pieceR, player, isSelected && i === 0);
+  }
+  if (count > 5) {
+    cx.fillStyle = '#fff'; cx.font = 'bold 10px sans-serif'; cx.textAlign = 'center'; cx.textBaseline = 'middle';
+    cx.fillText(count, pos.x, pos.row === 'top' ? pos.pieceStartY + 4*L.pieceSpacing : pos.pieceStartY - 4*L.pieceSpacing);
   }
 }
 
-function drawBarPieces(){
-  var midX=W/2;
-  var b0=getP(0,0),b1=getP(1,0);
-  var colors=['#f0e6d0','#1a1a1a'];
-  var strokes=['#c4a882','#444'];
-  for(var j=0;j<Math.min(b0,5);j++){
-    cx.fillStyle=colors[0];cx.strokeStyle=strokes[0];cx.lineWidth=1;
-    cx.beginPath();cx.arc(midX-30,H/2-30+j*13,5.5,0,Math.PI*2);cx.fill();cx.stroke();
-  }
-  if(b0>5){cx.fillStyle='#FFD700';cx.font='bold 8px sans-serif';cx.textAlign='center';cx.fillText(String(b0),midX-30,H/2-30+5*13+2);}
-  for(var j=0;j<Math.min(b1,5);j++){
-    cx.fillStyle=colors[1];cx.strokeStyle=strokes[1];cx.lineWidth=1;
-    cx.beginPath();cx.arc(midX+30,H/2-30+j*13,5.5,0,Math.PI*2);cx.fill();cx.stroke();
-  }
-  if(b1>5){cx.fillStyle='#FFD700';cx.font='bold 8px sans-serif';cx.textAlign='center';cx.fillText(String(b1),midX+30,H/2-30+5*13+2);}
+function drawPiece(cx, x, y, r, player, selected) {
+  var color = player === 1 ? '#FF5722' : '#4CAF50';
+  var dark = player === 1 ? '#D84315' : '#388E3C';
+  // Shadow
+  cx.fillStyle = 'rgba(0,0,0,0.3)'; cx.beginPath(); cx.arc(x+1,y+1,r,0,Math.PI*2); cx.fill();
+  // Main
+  cx.fillStyle = color; cx.beginPath(); cx.arc(x,y,r,0,Math.PI*2); cx.fill();
+  // Highlight
+  cx.fillStyle = 'rgba(255,255,255,0.2)'; cx.beginPath(); cx.arc(x-r*0.2,y-r*0.3,r*0.5,0,Math.PI*2); cx.fill();
+  // Border
+  cx.strokeStyle = dark; cx.lineWidth = 1.5; cx.beginPath(); cx.arc(x,y,r,0,Math.PI*2); cx.stroke();
+  // Selection
+  if (selected) { cx.strokeStyle='#FFD700'; cx.lineWidth=2.5; cx.beginPath(); cx.arc(x,y,r+3,0,Math.PI*2); cx.stroke(); }
 }
 
-function drawBorne(p,px,py){
-  var cnt=borne[p];
-  if(cnt===0)return;
-  var c=p===0?'#f0e6d0':'#1a1a1a';
-  var s=p===0?'#c4a882':'#444';
+function drawBarPieces(cx) {
+  var L = G.layout, bx = L.barX + L.barW/2;
+  var p1 = G.board[0], p2 = Math.abs(G.board[25]);
+  for (var i = 0; i < Math.min(p2,5); i++) drawPiece(cx, bx, L.H/2+8+i*(L.pieceR*2-2), L.pieceR-1, 2, false);
+  if (p2>5) { cx.fillStyle='#fff'; cx.font='bold 9px sans-serif'; cx.textAlign='center'; cx.fillText(p2, bx, L.H/2+8+4*(L.pieceR*2-2)); }
+  for (var i = 0; i < Math.min(p1,5); i++) drawPiece(cx, bx, L.H/2-8-i*(L.pieceR*2-2), L.pieceR-1, 1, false);
+  if (p1>5) { cx.fillStyle='#fff'; cx.font='bold 9px sans-serif'; cx.textAlign='center'; cx.fillText(p1, bx, L.H/2-8-4*(L.pieceR*2-2)); }
+}
+
+function drawBorneOff(cx) {
+  var L = G.layout;
+  if (G.borneOff[0] > 0) {
+    cx.fillStyle='rgba(255,87,34,0.3)'; cx.fillRect(2,L.H-24,30,20);
+    cx.fillStyle='#FF5722'; cx.font='bold 11px sans-serif'; cx.textAlign='center'; cx.textBaseline='middle';
+    cx.fillText(G.borneOff[0], 17, L.H-14);
+  }
+  if (G.borneOff[1] > 0) {
+    cx.fillStyle='rgba(76,175,80,0.3)'; cx.fillRect(L.W-32,4,30,20);
+    cx.fillStyle='#4CAF50'; cx.font='bold 11px sans-serif'; cx.textAlign='center'; cx.textBaseline='middle';
+    cx.fillText(G.borneOff[1], L.W-17, 14);
+  }
+}
+
+function drawDice(cx) {
+  if (!G.diceRolled || G.dice.length === 0) return;
+  var L = G.layout, ds = Math.min(26, L.W*0.065), gap = 5, n = G.dice.length;
+  var tw = ds*n + gap*(n-1), sx = L.W/2-tw/2, y = L.H/2-ds/2;
+  cx.fillStyle = 'rgba(0,0,0,0.65)'; cx.beginPath(); cx.roundRect(sx-8,y-8,tw+16,ds+16,10); cx.fill();
+  for (var i = 0; i < n; i++) drawDie(cx, sx+i*(ds+gap), y, ds, G.dice[i], G.usedDice[i]);
+}
+
+function drawDie(cx, x, y, sz, val, used) {
+  cx.fillStyle = used?'#444':'#fff'; cx.beginPath(); cx.roundRect(x,y,sz,sz,4); cx.fill();
+  cx.strokeStyle = used?'#333':'#ccc'; cx.lineWidth=1; cx.stroke();
+  if (val <= 0) return;
+  var pr=sz*0.08, cx1=x+sz/2, cy1=y+sz/2, off=sz*0.28;
+  cx.fillStyle = used?'#666':'#222';
+  var pp={1:[[0,0]],2:[[-1,-1],[1,1]],3:[[-1,-1],[0,0],[1,1]],4:[[-1,-1],[1,-1],[-1,1],[1,1]],5:[[-1,-1],[1,-1],[0,0],[-1,1],[1,1]],6:[[-1,-1],[1,-1],[-1,0],[1,0],[-1,1],[1,1]]};
+  var pips = pp[val]||[];
+  for (var i=0;i<pips.length;i++) { cx.beginPath(); cx.arc(cx1+pips[i][0]*off, cy1+pips[i][1]*off, pr, 0, Math.PI*2); cx.fill(); }
+}
+
+function drawHighlights(cx) {
+  if (!G.validDests || G.selectedPoint === null) return;
+  var L = G.layout;
+  for (var i = 0; i < G.validDests.length; i++) {
+    var dest = G.validDests[i];
+    if (dest.bearOff) {
+      var hx = G.currentPlayer===1 ? 2 : L.W-32;
+      var hy = G.currentPlayer===1 ? L.H-24 : 4;
+      cx.strokeStyle='#FFD700'; cx.lineWidth=2; cx.beginPath(); cx.roundRect(hx,hy,30,20,4); cx.stroke();
+    } else if (L.points[dest.point]) {
+      var pos = L.points[dest.point];
+      cx.strokeStyle='rgba(255,215,0,0.8)'; cx.lineWidth=2; cx.beginPath();
+      cx.arc(pos.x, pos.row==='top' ? pos.pieceStartY+L.pieceR : pos.pieceStartY-L.pieceR, L.pieceR+3, 0, Math.PI*2);
+      cx.stroke();
+    }
+  }
+}
+
+function drawSelection(cx) {
+  if (G.selectedPoint===null||G.selectedPoint===0||G.selectedPoint===25) return;
+  var L = G.layout, pos = L.points[G.selectedPoint];
+  if (!pos) return;
   cx.fillStyle='rgba(255,215,0,0.15)';
-  cx.fillRect(px-15,py-20,30,40);
-  cx.strokeStyle='#FFD700';cx.lineWidth=1;
-  cx.strokeRect(px-15,py-20,30,40);
-  for(var j=0;j<Math.min(cnt,5);j++){
-    cx.fillStyle=c;cx.strokeStyle=s;cx.lineWidth=1;
-    cx.beginPath();cx.arc(px,py-12+j*10,5,0,Math.PI*2);cx.fill();cx.stroke();
-  }
-  cx.fillStyle='#FFD700';cx.font='bold 9px sans-serif';cx.textAlign='center';
-  cx.fillText(String(cnt),px,py+25);
+  cx.fillRect(pos.x-L.ptW/2+1, pos.triY, L.ptW-2, pos.triH);
 }
 
-// ═══ GAME LOGIC ═══
-function getDiceValues(){
-  var v=[];
-  if(!used[0])v.push(dice[0]);
-  if(!used[1])v.push(dice[1]);
-  if(dice[0]===dice[1]&&v.length>0){
-    v=[dice[0],dice[0],dice[0],dice[0]];
-    // Remove used
-    var rem=used[0]?1:0;
-    v=v.slice(rem);
-  }
-  return v;
+// ═══ DICE ═══
+
+function rollDice() {
+  if (G.phase !== 'roll' || G.aiThinking) return;
+  var d1 = Math.floor(Math.random()*6)+1, d2 = Math.floor(Math.random()*6)+1;
+  G.dice = [d1,d2]; G.usedDice = [false,false]; G.diceRolled = true; G.phase = 'move';
+  if (d1 === d2) { G.usedDice=[false,false,false,false]; G.dice=[d1,d2,d1,d2]; setStatus(t('doubles')); }
+  else setStatus(t('yourTurn'));
+  if (getAllValidMoves().length === 0) { setStatus(t('noMove')); setTimeout(function(){switchTurn();},1200); }
+  render();
 }
 
-function canMoveFrom(p,pt){
-  if(getP(p,pt)<=0)return false;
-  var dv=getDiceValues();
-  for(var i=0;i<dv.length;i++){
-    var tgt=pt-dv[i]*(p===0?-1:1);
-    if(tgt<0||tgt>25)return false;
-    if(tgt===0||tgt===25)return true;
-    if(getP(p===0?1:0,tgt)<=1)return true;
+function getRemainingMoves() { var c=0; for(var i=0;i<G.usedDice.length;i++) if(!G.usedDice[i]) c++; return c; }
+
+// ═══ MOVE LOGIC ═══
+
+function allInHome(player) {
+  for (var i=1;i<=24;i++) {
+    var v=G.board[i];
+    if (player===1 && v>0 && (i<1||i>6)) return false;
+    if (player===2 && v<0 && (i<19||i>24)) return false;
   }
+  return true;
+}
+
+function canLand(player, point) {
+  if (point<1||point>24) return false;
+  var v=G.board[point];
+  if (v===0) return true;
+  if (player===1 && v>0) return true;
+  if (player===2 && v<0) return true;
+  if (player===1 && v===-1) return true;
+  if (player===2 && v===1) return true;
   return false;
 }
 
-function getMovesFrom(p,pt){
+function isOnBar(player) { return player===1 ? G.board[0]>0 : G.board[25]<0; }
+
+function getBarEntryMoves(player) {
   var moves=[];
-  var dv=getDiceValues();
-  for(var i=0;i<dv.length;i++){
-    var tgt=pt-dv[i]*(p===0?-1:1);
-    if(tgt<0||tgt>25)continue;
-    if(tgt===0||tgt===25){moves.push({from:pt,to:tgt,di:i});continue;}
-    if(getP(p===0?1:0,tgt)<=1)moves.push({from:pt,to:tgt,di:i});
+  for (var i=0;i<G.dice.length;i++) {
+    if (G.usedDice[i]) continue;
+    var d=G.dice[i], ep = player===1?(25-d):d;
+    if (canLand(player,ep)) moves.push({from:player===1?0:25,to:ep,dieIdx:i});
   }
   return moves;
 }
 
-function hasAnyMove(){
-  for(var pt=1;pt<=24;pt++){
-    if(getMovesFrom(cur,pt).length>0)return true;
-  }
-  return false;
-}
-
-function doMove(from,to,di){
-  setP(cur,from,getP(cur,from)-1);
-  if(to===0||to===25){
-    borne[cur]++;
-  }else{
-    setP(cur,to,getP(cur,to)+1);
-    // Hit
-    var opp=cur===0?1:0;
-    if(getP(opp,to)===1&&getP(cur,to)>=1){
-      setP(opp,to,0);setP(opp,0,getP(opp,0)+1);
-    }
-  }
-  // Mark die used
-  var diff=Math.abs(from-to);
-  if(dice[0]===dice[1]){
-    // Doubles - use one die per move
-    used[0]=true; // simplified: just mark one
-  }else{
-    if(!used[0]&&dice[0]===diff)used[0]=true;
-    else if(!used[1]&&dice[1]===diff)used[1]=true;
-    else if(!used[0])used[0]=true;
-    else if(!used[1])used[1]=true;
-  }
-  sel=-1;
-  updDice();
-  draw();
-  checkWin();
-}
-
-function checkWin(){
-  if(borne[cur]>=15){
-    document.getElementById('wT').textContent='🏆 '+(cur===0?'Sen':'Rakip')+' Kazandı!';
-    document.getElementById('win').classList.add('show');
-    return true;
-  }
-  return false;
-}
-
-function nextTurn(){
-  cur=cur===0?1:0;
-  dice=[0,0];used=[false,false];sel=-1;rolled=false;
-  updDice();updInfo();
-  setMsg(cur===0?'🎲 Zar at!':'Rakip oynuyor...');
-  if(cur===1&&mode==='ai')setTimeout(aiRoll,600);
-}
-
-function rollDice(){
-  if(rolled)return;
-  if(checkWin())return;
-  dice=[Math.ceil(Math.random()*6),Math.ceil(Math.random()*6)];
-  used=[false,false];rolled=true;
-  updDice();
-  if(dice[0]===dice[1])setMsg('Yedin! ('+dice[0]+'-'+dice[0]+') İki kez oyna');
-  else setMsg('Seç: hangi taşla oynayacaksın');
-  if(!hasAnyMove()){
-    setMsg('Hamle yok, pas geçiliyor...');
-    setTimeout(nextTurn,800);
-  }
-  draw();
-}
-
-function tap(pt){
-  if(aiTurn||!rolled)return;
-  if(sel<0){
-    // Select piece
-    if(getP(cur,pt)>0&&canMoveFrom(cur,pt)){
-      sel=pt;draw();
-    }
-  }else{
-    // Try to move
-    var moves=getMovesFrom(cur,sel);
-    for(var i=0;i<moves.length;i++){
-      if(moves[i].to===pt){
-        doMove(sel,pt,moves[i].di);
-        // Check if more moves
-        if(getDiceValues().length>0&&hasAnyMove()){
-          setMsg('Devam et!');
-        }else{
-          setTimeout(nextTurn,300);
-        }
-        return;
+function getNormalMoves(player) {
+  var moves=[], seen={};
+  for (var p=1;p<=24;p++) {
+    var v=G.board[p];
+    if (player===1 && v<=0) continue;
+    if (player===2 && v>=0) continue;
+    for (var i=0;i<G.dice.length;i++) {
+      if (G.usedDice[i]) continue;
+      var d=G.dice[i], target = player===1?(p-d):(p+d);
+      if (target>=1&&target<=24&&canLand(player,target)) {
+        var key=p+'->'+target+'_'+i;
+        if (!seen[key]) { moves.push({from:p,to:target,dieIdx:i}); seen[key]=true; }
       }
     }
-    // Can't move there, try selecting new piece
-    if(getP(cur,pt)>0&&canMoveFrom(cur,pt)){
-      sel=pt;draw();
-    }else{
-      sel=-1;draw();
+  }
+  return moves;
+}
+
+function getBearingOffMoves(player) {
+  if (!allInHome(player)) return [];
+  var moves=[], seen={};
+  for (var p=1;p<=24;p++) {
+    var v=G.board[p];
+    if (player===1 && v<=0) continue;
+    if (player===2 && v>=0) continue;
+    for (var i=0;i<G.dice.length;i++) {
+      if (G.usedDice[i]) continue;
+      var d=G.dice[i];
+      if (player===1) {
+        if (p>=1&&p<=6&&p<=d) { var key=p+'->off_'+i; if(!seen[key]){moves.push({from:p,to:0,bearOff:true,dieIdx:i});seen[key]=true;} }
+      } else {
+        var lp=p-18;
+        if (lp>=1&&lp<=6&&lp<=d) { var key=p+'->off_'+i; if(!seen[key]){moves.push({from:p,to:25,bearOff:true,dieIdx:i});seen[key]=true;} }
+      }
     }
   }
+  return moves;
+}
+
+function getAllValidMoves() {
+  if (isOnBar(G.currentPlayer)) return getBarEntryMoves(G.currentPlayer);
+  return getNormalMoves(G.currentPlayer).concat(getBearingOffMoves(G.currentPlayer));
+}
+
+function getDestinationsForPoint(fromPoint) {
+  var player=G.currentPlayer, dests=[], seen={};
+  if (isOnBar(player)) {
+    if ((player===1&&fromPoint!==0)||(player===2&&fromPoint!==25)) return [];
+    return getBarEntryMoves(player);
+  }
+  for (var i=0;i<G.dice.length;i++) {
+    if (G.usedDice[i]) continue;
+    var d=G.dice[i], target=player===1?(fromPoint-d):(fromPoint+d);
+    if (target>=1&&target<=24&&canLand(player,target)) {
+      var key='n'+target+'_'+i; if(!seen[key]){dests.push({point:target,dieIdx:i});seen[key]=true;}
+    }
+    if (allInHome(player)) {
+      if (player===1&&fromPoint>=1&&fromPoint<=6&&fromPoint<=d) { var key='b0_'+i; if(!seen[key]){dests.push({point:0,dieIdx:i,bearOff:true});seen[key]=true;} }
+      if (player===2&&fromPoint>=19&&fromPoint<=24&&(fromPoint-18)<=d) { var key='b25_'+i; if(!seen[key]){dests.push({point:25,dieIdx:i,bearOff:true});seen[key]=true;} }
+    }
+  }
+  return dests;
+}
+
+// ═══ MOVE EXECUTION ═══
+
+function executeMove(from, to, dieIdx) {
+  var player = G.currentPlayer;
+
+  // Remove from source
+  G.board[from] = player===1 ? G.board[from]-1 : G.board[from]+1;
+
+  if (to===0||to===25) {
+    G.borneOff[player-1]++;
+  } else {
+    var tv = G.board[to];
+    if (player===1 && tv===-1) { G.board[to]=1; G.board[25]--; }
+    else if (player===2 && tv===1) { G.board[to]=-1; G.board[0]++; }
+    else { G.board[to] = player===1 ? G.board[to]+1 : G.board[to]-1; }
+  }
+
+  G.usedDice[dieIdx] = true;
+  G.selectedPoint = null;
+  G.validDests = [];
+
+  if (G.borneOff[player-1] >= 15) {
+    G.phase = 'ended';
+    showWin(player===1 ? t('p1win') : t('p2win'));
+    return;
+  }
+
+  if (getRemainingMoves()===0 || getAllValidMoves().length===0) {
+    switchTurn();
+  } else {
+    setStatus((player===1?'🔴':'🟢')+' '+t('yourTurn')+' ('+getRemainingMoves()+')');
+  }
+  render();
+}
+
+// ═══ TURN MANAGEMENT ═══
+
+function switchTurn() {
+  G.currentPlayer = G.currentPlayer===1 ? 2 : 1;
+  G.phase='roll'; G.dice=[]; G.usedDice=[]; G.diceRolled=false;
+  G.selectedPoint=null; G.validDests=[];
+
+  if (G.currentPlayer===1) {
+    setStatus('🔴 '+t('yourTurn'));
+    setMsg(t('moveHint'));
+  } else {
+    setStatus('🟢 '+t('oppTurn'));
+    setMsg(t('oppTurn'));
+  }
+  updateRollButton();
+  render();
+  if (G.currentPlayer===2) setTimeout(aiTurn, 700);
+}
+
+function updateRollButton() {
+  var btn = document.getElementById('bR');
+  if (G.phase==='roll') { btn.style.display=''; btn.disabled=(G.currentPlayer!==1); btn.textContent=t('rollDice'); }
+  else btn.style.display='none';
+}
+
+// ═══ WIN ═══
+
+function showWin(text) {
+  document.getElementById('wT').textContent = '🏆 ' + text;
+  document.getElementById('wS').textContent = '🔴 ' + G.borneOff[0] + ' — ' + G.borneOff[1] + ' 🟢';
+  document.getElementById('win').classList.add('show');
+}
+
+function resetGame() {
+  initBoard(); calcLayout();
+  document.getElementById('win').classList.remove('show');
+  setStatus(t('statusStart'));
+  setMsg(t('ready'));
+  updateRollButton();
+  render();
 }
 
 // ═══ AI ═══
-function aiRoll(){
-  aiTurn=true;
-  rollDice();
-  if(!rolled){aiTurn=false;return;}
-  setTimeout(aiPlay,400);
+
+function aiTurn() {
+  if (G.currentPlayer!==2||G.phase==='ended') return;
+  G.aiThinking = true;
+  setStatus(t('oppTurn'));
+
+  var d1=Math.floor(Math.random()*6)+1, d2=Math.floor(Math.random()*6)+1;
+  G.dice=[d1,d2]; G.usedDice=[false,false]; G.diceRolled=true; G.phase='move';
+  if (d1===d2) { G.usedDice=[false,false,false,false]; G.dice=[d1,d2,d1,d2]; }
+  render();
+  setTimeout(function(){aiMakeMove();},500);
 }
 
-function aiPlay(){
-  var dv=getDiceValues();
-  if(dv.length===0){aiTurn=false;nextTurn();return;}
+function aiMakeMove() {
+  if (G.phase==='ended') { G.aiThinking=false; return; }
+  var moves = getAllValidMoves();
+  if (moves.length===0) { G.aiThinking=false; switchTurn(); return; }
 
-  var bestMove=null,bestScore=-99;
-  for(var pt=1;pt<=24;pt++){
-    if(getP(1,pt)<=0)continue;
-    var moves=getMovesFrom(1,pt);
-    for(var i=0;i<moves.length;i++){
-      var m=moves[i];
-      var sc=0;
-      if(m.to===25)sc+=15; // bearing off
-      if(m.to>=19)sc+=3;
-      if(getP(0,m.to)===1)sc+=4; // hit
-      if(getP(0,m.to)===0)sc+=2; // safe
-      if(m.from>=19)sc+=2;
-      if(sc>bestScore){bestScore=sc;bestMove=m;}
+  var best=null, bestScore=-999;
+  for (var i=0;i<moves.length;i++) {
+    var m=moves[i], score=0;
+
+    // Bar re-entry: highest priority
+    if (m.from===0||m.from===25) score += 25;
+
+    // Bearing off
+    if (m.bearOff) { score += 20; score += G.dice[m.dieIdx]*0.5; }
+    else {
+      var tv = G.board[m.to]||0;
+
+      // Hit opponent single
+      if (tv===1) score += 12;
+
+      // Making a point (2+ pieces)
+      var wh = Math.abs(tv)+1;
+      if (wh>=2) score += 8;
+
+      // Advance toward home
+      score += m.to*0.3;
+
+      // Priority for back pieces
+      if (m.from>=19) score += 2;
+
+      // Home board bonus
+      if (m.to>=19) score += 3;
+
+      // Avoid blots on empty
+      if (tv===0) score -= 2;
+
+      // Avoid leaving pieces vulnerable
+      if (tv===-1) score -= 5;
+
+      // Don't stack too high
+      if (wh>=4) score -= 1;
+    }
+
+    score += Math.random()*2;
+
+    if (score>bestScore) { bestScore=score; best=m; }
+  }
+
+  if (best) executeMove(best.from, best.to, best.dieIdx);
+
+  if (G.phase!=='ended' && getRemainingMoves()>0 && getAllValidMoves().length>0) {
+    setTimeout(function(){aiMakeMove();},400);
+  } else {
+    G.aiThinking = false;
+  }
+}
+
+// ═══ EVENT HANDLERS ═══
+
+function bindUI() {
+  G.cvs.onclick = onBoardClick;
+  document.getElementById('bR').onclick = function(){ if(G.phase==='roll') rollDice(); };
+  document.getElementById('bNew').onclick = resetGame;
+  document.getElementById('bR2').onclick = resetGame;
+
+  document.getElementById('langBtn').onclick = function() {
+    LANG = LANG==='tr' ? 'en' : 'tr';
+    try { localStorage.setItem('tonton-lang', LANG); } catch(e) {}
+    updateUILabels();
+  };
+
+  window.onresize = function() { resizeCanvas(); };
+
+  // Telegram WebApp
+  if (window.Telegram && window.Telegram.WebApp) {
+    try { window.Telegram.WebApp.ready(); window.Telegram.WebApp.expand(); } catch(e) {}
+  }
+}
+
+function onBoardClick(e) {
+  if (G.phase==='ended'||G.aiThinking||G.currentPlayer!==1) return;
+  var rect = G.cvs.getBoundingClientRect();
+  var mx = e.clientX-rect.left, my = e.clientY-rect.top;
+  if (G.phase==='roll') return;
+  var L = G.layout;
+
+  // Bear off click
+  if (G.selectedPoint!==null && G.currentPlayer===1 && mx<34 && my>L.H-28) {
+    for (var i=0;i<G.validDests.length;i++) {
+      if (G.validDests[i].bearOff) { executeMove(G.selectedPoint, G.validDests[i].point, G.validDests[i].dieIdx); return; }
     }
   }
 
-  if(bestMove){
-    doMove(bestMove.from,bestMove.to,bestMove.di);
-    if(getDiceValues().length>0&&hasAnyMove()){
-      setTimeout(aiPlay,400);
-    }else{
-      aiTurn=false;
-      setTimeout(nextTurn,300);
-    }
-  }else{
-    aiTurn=false;
-    used=[true,true];
-    nextTurn();
+  var clickedPoint = hitTestPoint(mx, my);
+
+  if (clickedPoint===null) { G.selectedPoint=null; G.validDests=[]; render(); return; }
+
+  // Bar check
+  if (isOnBar(G.currentPlayer)) {
+    if (mx>=L.barX&&mx<=L.barX+L.barW) clickedPoint = G.currentPlayer===1?0:25;
+    else { G.selectedPoint=null; G.validDests=[]; render(); return; }
   }
+
+  // Select
+  if (G.selectedPoint===null) {
+    var v=G.board[clickedPoint]||0;
+    var isOwn = (G.currentPlayer===1&&(v>0||clickedPoint===0)) || (G.currentPlayer===2&&(v<0||clickedPoint===25));
+    if (isOwn && getDestinationsForPoint(clickedPoint).length>0) {
+      G.selectedPoint=clickedPoint; G.validDests=getDestinationsForPoint(clickedPoint); render();
+    }
+    return;
+  }
+
+  // Move to destination
+  for (var i=0;i<G.validDests.length;i++) {
+    if (G.validDests[i].point===clickedPoint) { executeMove(G.selectedPoint, clickedPoint, G.validDests[i].dieIdx); return; }
+  }
+
+  // Switch selection
+  var v=G.board[clickedPoint]||0;
+  var isOwn = (G.currentPlayer===1&&(v>0||clickedPoint===0)) || (G.currentPlayer===2&&(v<0||clickedPoint===25));
+  if (isOwn && clickedPoint!==G.selectedPoint) {
+    var dests=getDestinationsForPoint(clickedPoint);
+    if (dests.length>0) { G.selectedPoint=clickedPoint; G.validDests=dests; render(); return; }
+  }
+
+  G.selectedPoint=null; G.validDests=[]; render();
+}
+
+function hitTestPoint(mx, my) {
+  var L = G.layout;
+  if (mx>=L.barX&&mx<=L.barX+L.barW) return null;
+  var col = mx < L.barX ? Math.floor((mx-L.pad)/L.ptW) : Math.floor((mx-L.pad-L.barW)/L.ptW)+6;
+  if (col<0||col>11) return null;
+  return my < L.H/2 ? TOP_PTS[col] : BOT_PTS[col];
 }
 
 // ═══ UI HELPERS ═══
-function updDice(){
-  document.getElementById('d1').textContent=dice[0]||'?';
-  document.getElementById('d2').textContent=dice[1]||'?';
-  document.getElementById('d1').className='die'+(used[0]?' off':'');
-  document.getElementById('d2').className='die'+(used[1]?' off':'');
+
+function setStatus(text) { document.getElementById('status').textContent=text; }
+function setMsg(text) { document.getElementById('msg').textContent=text; }
+
+function updateScore() {
+  var p1=15-G.borneOff[0], p2=15-G.borneOff[1];
+  document.getElementById('sMe').textContent = '🔴 '+t('you')+': '+p1;
+  document.getElementById('sOpp').textContent = '🟢 '+t('ai')+': '+p2;
+  document.getElementById('sMe').style.opacity = G.currentPlayer===1?'1':'0.5';
+  document.getElementById('sOpp').style.opacity = G.currentPlayer===2?'1':'0.5';
 }
-function updInfo(){
-  document.getElementById('n1').textContent='⚫ Sen ('+borne[0]+')';
-  document.getElementById('n2').textContent='⚪ Rakip ('+borne[1]+')';
-  document.getElementById('n1').className=cur===0?'on':'';
-  document.getElementById('n2').className=cur===1?'on':'';
+
+function updateUILabels() {
+  document.getElementById('lblAI').textContent = t('ai');
+  document.getElementById('bR').textContent = t('rollDice');
+  document.getElementById('bR2').textContent = '🔄 '+t('retry');
+  document.getElementById('langBtn').textContent = LANG==='tr'?'🇹🇷':'🇬🇧';
+  updateScore();
+  updateRollButton();
+  if (G.phase==='roll') setStatus(G.currentPlayer===1 ? '🔴 '+t('yourTurn') : '🟢 '+t('oppTurn'));
 }
-function setMsg(t){document.getElementById('msg').textContent=t;}
-
-// ═══ INPUT ═══
-document.getElementById('game').onclick=function(e){
-  if(cur===1&&mode==='ai')return;
-  var r=cvs.getBoundingClientRect();
-  var mx=(e.clientX-r.left)/r.width*W;
-  var my=(e.clientY-r.top)/r.height*H;
-  var boardT=6,boardB=H-6;
-  var midX=W/2;
-  var ptW=(midX-12)/6;
-  var isTop=my<(boardT+boardB)/2;
-
-  for(var i=1;i<=24;i++){
-    var tx;
-    if(i<=12){tx=midX+ptW/2+(i-1)*ptW;}
-    else{tx=midX-ptW/2-(i-13)*ptW;}
-    if(Math.abs(mx-tx)<ptW/2){
-      tap(i);return;
-    }
-  }
-};
-
-document.getElementById('bRoll').onclick=function(){if(!rolled&&!aiTurn)rollDice();};
-document.getElementById('bPass').onclick=function(){if(rolled&&!aiTurn)nextTurn();};
-document.getElementById('bNew').onclick=init;
-document.getElementById('bR').onclick=init;
-document.getElementById('mAi').onclick=function(){mode='ai';this.classList.add('on');document.getElementById('m2p').classList.remove('on');init();};
-document.getElementById('m2p').onclick=function(){mode='2p';this.classList.add('on');document.getElementById('mAi').classList.remove('on');init();};
-
-window.onresize=function(){setupCanvas();draw();};
 
 // ═══ START ═══
-setupCanvas();
 init();
-draw();
+})();
 </script>
 </body>
 </html>
